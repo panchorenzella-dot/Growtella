@@ -1,7 +1,8 @@
 "use client";
 
 import type { Session } from "@supabase/supabase-js";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { products, siteConfig } from "@/lib/site";
 import { getSupabaseClient, hasSupabaseConfig } from "@/lib/supabase/client";
 
@@ -117,6 +118,7 @@ function UsageCard({ item }: { item: UsageItem }) {
 }
 
 export function AccountCenter() {
+  const router = useRouter();
   const configured = hasSupabaseConfig();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(configured);
@@ -134,6 +136,7 @@ export function AccountCenter() {
   const [profile, setProfile] = useState(profileFromSession(null));
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const paypalReturnHandled = useRef(false);
 
   const loadAccountData = useCallback(async () => {
     const supabase = getSupabaseClient();
@@ -206,6 +209,57 @@ export function AccountCenter() {
     return () => data.subscription.unsubscribe();
   }, [loadAccountData]);
 
+  useEffect(() => {
+    if (!session || paypalReturnHandled.current) return;
+    const params = new URLSearchParams(window.location.search);
+    const paypalStatus = params.get("paypal");
+    const subscriptionId = params.get("subscription_id");
+
+    if (paypalStatus !== "success") {
+      if (params.get("next") === "/pro") router.replace("/pro");
+      return;
+    }
+
+    paypalReturnHandled.current = true;
+    if (!subscriptionId) {
+      queueMicrotask(() => setMessage("PayPal confirmó el regreso, pero todavía no informó la suscripción. Revisá tu plan en unos instantes."));
+      window.history.replaceState({}, "", "/cuenta");
+      return;
+    }
+
+    void (async () => {
+      setDataLoading(true);
+      setMessage("Estamos confirmando tu suscripción con PayPal...");
+      try {
+        const response = await fetch("/api/paypal/subscriptions/sync", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ subscriptionId }),
+        });
+        const result = await response.json() as { message?: string; error?: string };
+        setMessage(result.message || result.error || "Tu plan se está actualizando.");
+        if (response.ok) {
+          const analyticsWindow = window as Window & {
+            gtag?: (command: "event", eventName: string, parameters: Record<string, unknown>) => void;
+          };
+          analyticsWindow.gtag?.("event", "purchase", {
+            transaction_id: subscriptionId,
+            affiliation: "Growtella Pro",
+          });
+          await loadAccountData();
+        }
+      } catch {
+        setMessage("El pago regresó correctamente, pero no pudimos actualizar el plan todavía. Volvé a cargar esta página en unos minutos.");
+      } finally {
+        setDataLoading(false);
+        window.history.replaceState({}, "", "/cuenta");
+      }
+    })();
+  }, [loadAccountData, router, session]);
+
   const userName = useMemo(() => {
     const metadata = session?.user.user_metadata ?? {};
     return String(metadata.full_name || metadata.name || "Emprendedor/a");
@@ -229,12 +283,13 @@ export function AccountCenter() {
         setMessage("Tu contraseña se actualizó correctamente.");
         setMode("login");
       } else if (mode === "signup") {
+        const next = new URLSearchParams(window.location.search).get("next") === "/pro" ? "?next=/pro" : "";
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: { full_name: fullName },
-            emailRedirectTo: `${window.location.origin}/cuenta`,
+            emailRedirectTo: `${window.location.origin}/cuenta${next}`,
           },
         });
         if (error) throw error;
@@ -243,6 +298,7 @@ export function AccountCenter() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         setMessage("Ingresaste correctamente.");
+        if (new URLSearchParams(window.location.search).get("next") === "/pro") router.push("/pro");
       }
     } catch (error) {
       setMessage(friendlyAuthError(error instanceof Error ? error.message : "No pudimos completar el acceso."));
@@ -256,9 +312,10 @@ export function AccountCenter() {
     if (!supabase) return;
     setSaving(true);
     setMessage("Abriendo Google...");
+    const next = new URLSearchParams(window.location.search).get("next") === "/pro" ? "?next=/pro" : "";
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/cuenta`, skipBrowserRedirect: true },
+      options: { redirectTo: `${window.location.origin}/cuenta${next}`, skipBrowserRedirect: true },
     });
     if (error || !data.url) {
       setSaving(false);

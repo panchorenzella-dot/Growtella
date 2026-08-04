@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { AccountCenter } from "@/components/AccountCenter";
 import { PageShell } from "@/components/PageShell";
 
-export const metadata: Metadata = { title: "Mi cuenta", description: "Acceso central a tu cuenta y herramientas de Growtella." };
+export const metadata: Metadata = {
+  title: "Mi cuenta",
+  description: "Acceso central a tu cuenta y herramientas de Growtella.",
+  robots: { index: false, follow: false },
+};
 
 export default function AccountPage() {
   return (

@@ -25,12 +25,28 @@ export const metadata: Metadata = {
   },
   twitter: { card: "summary_large_image", title: "Growtella", description: siteConfig.description },
   robots: { index: true, follow: true },
+  verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
+    : undefined,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Growtella",
+    url: siteConfig.url,
+    email: siteConfig.email,
+    description: siteConfig.description,
+  };
+
   return (
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable} scroll-smooth antialiased`}>
       <body className="flex min-h-screen flex-col bg-white text-[#10291f]">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema).replace(/</g, "\\u003c") }}
+        />
         <SiteHeader />
         {children}
         <SiteFooter />
