@@ -1,0 +1,41 @@
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@/components/Analytics";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SiteHeader } from "@/components/SiteHeader";
+import { siteConfig } from "@/lib/site";
+import "./globals.css";
+
+const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.url),
+  title: { default: "Growtella | Herramientas para hacer crecer tu negocio", template: "%s | Growtella" },
+  description: siteConfig.description,
+  applicationName: "Growtella",
+  keywords: ["herramientas para emprendedores", "calculadora de negocios", "inteligencia artificial", "presupuestos", "Growtella"],
+  openGraph: {
+    title: "Growtella | Herramientas para hacer crecer tu negocio",
+    description: siteConfig.description,
+    type: "website",
+    locale: "es_AR",
+    siteName: "Growtella",
+  },
+  twitter: { card: "summary_large_image", title: "Growtella", description: siteConfig.description },
+  robots: { index: true, follow: true },
+};
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="es" className={`${geistSans.variable} ${geistMono.variable} scroll-smooth antialiased`}>
+      <body className="flex min-h-screen flex-col bg-white text-[#10291f]">
+        <SiteHeader />
+        {children}
+        <SiteFooter />
+        <Analytics />
+      </body>
+    </html>
+  );
+}

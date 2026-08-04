@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #10291f;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+a, button, summary { -webkit-tap-highlight-color: transparent; }
+
+::selection { background: #c8f0d6; color: #10291f; }
+
+.focus-ring:focus-visible {
+  outline: 3px solid rgba(64, 157, 105, .32);
+  outline-offset: 3px;
+}
+
+.eyebrow {
+  color: #26734f;
+  font-size: .74rem;
+  font-weight: 850;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.hero-grid {
+  background-image:
+    linear-gradient(rgba(32, 102, 70, .055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(32, 102, 70, .055) 1px, transparent 1px);
+  background-size: 38px 38px;
+  mask-image: linear-gradient(to bottom, black 0%, transparent 88%);
+}
+
+.soft-shadow { box-shadow: 0 24px 70px rgba(20, 73, 50, .11); }
+
+.card-hover { transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
+.card-hover:hover { transform: translateY(-4px); border-color: #bdd8c8; box-shadow: 0 22px 55px rgba(20, 73, 50, .1); }
+
+.prose h2 { margin-top: 2.3rem; color: #153f2e; font-size: 1.35rem; font-weight: 850; letter-spacing: -.02em; }
+.prose p { margin-top: .8rem; line-height: 1.8; }
+.prose a { color: #26734f; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+}
