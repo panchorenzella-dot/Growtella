@@ -229,7 +229,14 @@ export function AccountCenter() {
         setMessage("Tu contraseña se actualizó correctamente.");
         setMode("login");
       } else if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName } } });
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { full_name: fullName },
+            emailRedirectTo: `${window.location.origin}/cuenta`,
+          },
+        });
         if (error) throw error;
         setMessage(data.session ? "Tu cuenta Growtella ya está lista." : "Revisá tu email para confirmar la cuenta.");
       } else {
