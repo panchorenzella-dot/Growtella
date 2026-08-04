@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BrandMark } from "./BrandMark";
+import { AccountHeaderLink } from "./AccountHeaderLink";
 
 const links = [
   { href: "/herramientas", label: "Herramientas" },
@@ -25,9 +26,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Link href="/cuenta" className="rounded-full px-4 py-2.5 text-sm font-bold text-[#153f2e] transition hover:bg-[#eff6f1] focus-ring">
-            Ingresar
-          </Link>
+          <AccountHeaderLink />
           <Link href="/herramientas" className="rounded-full bg-[#153f2e] px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#0d3223] focus-ring">
             Empezar gratis
           </Link>
@@ -45,7 +44,7 @@ export function SiteHeader() {
               </Link>
             ))}
             <div className="mt-2 grid gap-2 border-t border-[#e5ede8] pt-3">
-              <Link href="/cuenta" className="rounded-xl px-4 py-3 text-center text-sm font-bold text-[#153f2e]">Ingresar</Link>
+              <AccountHeaderLink mobile />
               <Link href="/herramientas" className="rounded-xl bg-[#153f2e] px-4 py-3 text-center text-sm font-bold text-white">Empezar gratis</Link>
             </div>
           </div>

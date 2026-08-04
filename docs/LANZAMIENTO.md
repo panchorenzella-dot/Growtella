@@ -4,9 +4,11 @@
 
 - Comprar el dominio definitivo.
 - Crear un correo del dominio, por ejemplo `hola@tudominio.com`.
-- Crear un repositorio independiente para esta carpeta.
+- Confirmar que el repositorio independiente de Growtella esté actualizado en GitHub.
 - Importar ese repositorio como un proyecto nuevo de Vercel.
-- Agregar en Vercel las variables de `.env.example` con los valores reales.
+- Agregar en Vercel las variables públicas de `.env.example` con los valores reales.
+- Usar exactamente el mismo proyecto de Supabase que la calculadora.
+- Agregar la URL publicada y `/cuenta` a las redirecciones permitidas de Supabase Auth.
 - Conectar el dominio principal en Vercel.
 - Decidir si la calculadora seguirá con su dominio actual o usará un subdominio.
 
@@ -21,10 +23,11 @@
 ## Cuenta y producto
 
 - Probar registro, ingreso, recuperación de contraseña y cierre de sesión.
-- Confirmar que el usuario conserve sus datos al abrir otra herramienta.
-- Probar saldo, consumo e historial de créditos con usuarios de prueba.
+- Confirmar que el usuario vea el mismo plan y los mismos datos al abrir otra herramienta.
+- Probar límites, consumos e historial de IA con usuarios de prueba.
 - Probar compra, renovación y cancelación de Growtella Pro.
 - Definir límites de gasto de OpenAI para evitar sorpresas.
+- Mantener `OPENAI_API_KEY` solo en el servidor de las aplicaciones que utilicen IA.
 
 ## Control final
 

@@ -1,6 +1,6 @@
 # Growtella
 
-Página principal del ecosistema Growtella. Reúne las aplicaciones, la futura cuenta central y Growtella Pro con una identidad visual blanca y verde.
+Página principal del ecosistema Growtella. Reúne las aplicaciones, la cuenta central y Growtella Pro con una identidad visual blanca y verde.
 
 ## Desarrollo
 
@@ -13,11 +13,13 @@ Abrir `http://localhost:3000`.
 
 ## Variables de entorno
 
-Copiar `.env.example` a `.env.local` y completar las variables necesarias. El sitio funciona sin integraciones para desarrollo visual; las conexiones se habilitan al configurar Supabase, OpenAI y Analytics.
+Copiar `.env.example` a `.env.local` y completar las variables necesarias. Para compartir usuarios, plan Pro, usos de IA e historial, `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` deben apuntar al mismo proyecto de Supabase que utiliza Calculadora Emprendedora.
+
+Growtella no necesita una clave privada de OpenAI porque esta página no realiza consultas de IA. La calculadora conserva `OPENAI_API_KEY` únicamente en su servidor; las herramientas futuras deberán seguir el mismo patrón.
 
 ## Publicación
 
-El proyecto está preparado para publicarse como un proyecto independiente de Vercel y conectarse al dominio principal de Growtella.
+El proyecto está preparado para publicarse como un proyecto independiente de Vercel y conectarse al dominio principal de Growtella. Después de publicar, hay que autorizar `https://TU-DOMINIO/cuenta` como URL de redirección en Supabase Auth.
 
 ## Documentación
 
