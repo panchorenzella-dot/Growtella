@@ -4,9 +4,9 @@ import { AccountHeaderLink } from "./AccountHeaderLink";
 
 const links = [
   { href: "/herramientas", label: "Herramientas" },
+  { href: "/diagnostico", label: "Diagnóstico gratis" },
   { href: "/pro", label: "Growtella Pro" },
-  { href: "/#como-funciona", label: "Cómo funciona" },
-  { href: "/contacto", label: "Contacto" },
+  { href: "/#precios", label: "Precios" },
 ];
 
 export function SiteHeader() {
@@ -17,7 +17,7 @@ export function SiteHeader() {
           <BrandMark />
         </Link>
 
-        <nav className="hidden items-center gap-7 text-sm font-semibold text-[#496057] md:flex" aria-label="Navegación principal">
+        <nav className="hidden items-center gap-6 text-sm font-semibold text-[#496057] lg:flex" aria-label="Navegación principal">
           {links.map((link) => (
             <Link key={link.href} href={link.href} className="transition hover:text-[#153f2e] focus-ring">
               {link.label}
@@ -25,14 +25,14 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden items-center gap-3 lg:flex">
           <AccountHeaderLink />
-          <Link href="/herramientas" className="rounded-full bg-[#153f2e] px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#0d3223] focus-ring">
-            Empezar gratis
+          <Link href="/diagnostico" className="rounded-full bg-[#153f2e] px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#0d3223] focus-ring">
+            Probar gratis
           </Link>
         </div>
 
-        <details className="group relative md:hidden">
+        <details className="group relative lg:hidden">
           <summary className="grid size-11 cursor-pointer list-none place-items-center rounded-full border border-[#d7e5dc] text-[#153f2e] focus-ring">
             <span className="sr-only">Abrir menú</span>
             <span className="text-xl leading-none">☰</span>
@@ -45,7 +45,7 @@ export function SiteHeader() {
             ))}
             <div className="mt-2 grid gap-2 border-t border-[#e5ede8] pt-3">
               <AccountHeaderLink mobile />
-              <Link href="/herramientas" className="rounded-xl bg-[#153f2e] px-4 py-3 text-center text-sm font-bold text-white">Empezar gratis</Link>
+              <Link href="/diagnostico" className="rounded-xl bg-[#153f2e] px-4 py-3 text-center text-sm font-bold text-white">Probar gratis</Link>
             </div>
           </div>
         </details>

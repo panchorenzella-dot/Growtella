@@ -11,14 +11,18 @@ export const siteConfig = {
     "https://www.calculadoraemprendedora.com",
 };
 
-export type Product = {
+type ProductBase = {
   name: string;
   description: string;
   eyebrow: string;
-  href: string;
-  status: "available" | "coming";
   accent: "emerald" | "lime" | "mint";
+  features: string[];
 };
+
+export type Product = ProductBase & (
+  | { status: "available"; href: string; price: string; priceDetail: string; external?: boolean }
+  | { status: "coming"; href?: never; price?: never; priceDetail?: never; external?: never }
+);
 
 export const products: Product[] = [
   {
@@ -29,14 +33,30 @@ export const products: Product[] = [
     href: siteConfig.calculatorUrl,
     status: "available",
     accent: "emerald",
+    price: "Gratis",
+    priceDetail: "funciones esenciales",
+    features: ["16 calculadoras", "Costos y márgenes", "Punto de equilibrio"],
+    external: true,
   },
   {
-    name: "Presupuestos con IA",
+    name: "Diagnóstico 360°",
+    description:
+      "Evaluá 15 indicadores, sumá tus números y recibí un mapa de madurez con un plan de 30 días.",
+    eyebrow: "Nuevo · Informe completo",
+    href: "/diagnostico",
+    status: "available",
+    accent: "mint",
+    price: "Gratis",
+    priceDetail: "sin registro",
+    features: ["15 indicadores estratégicos", "Margen y punto de equilibrio", "Plan personalizado de 30 días"],
+  },
+  {
+    name: "Presupuestos Inteligentes",
     description:
       "Creá presupuestos profesionales, editables y listos para enviar a tus clientes.",
-    eyebrow: "Próxima herramienta",
-    href: "#proximamente",
+    eyebrow: "Próximamente",
     status: "coming",
     accent: "lime",
+    features: ["Edición asistida", "Diseños profesionales", "Exportación lista para enviar"],
   },
 ];

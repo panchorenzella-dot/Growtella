@@ -24,7 +24,9 @@ const proBenefits = [
 
 const comparisons = [
   ["Cuenta central", "Incluida", "Incluida"],
-  ["Herramientas", "Funciones esenciales", "Beneficios Pro en todas"],
+  ["Calculadora Emprendedora", "Funciones esenciales", "Funciones y exportaciones Pro"],
+  ["Diagnóstico 360°", "Completo y sin registro", "Completo y sin registro"],
+  ["Presupuestos Inteligentes", "Próximamente", "Próximamente"],
   ["Análisis con IA", "1 por semana", "30 por mes"],
   ["Mensajes con IA", "5 por día", "300 por mes"],
   ["Escenarios", "3 por día", "Ilimitados"],

@@ -15,6 +15,7 @@ export function SiteFooter() {
           <p className="text-sm font-extrabold text-[#153f2e]">Plataforma</p>
           <div className="mt-4 grid gap-3 text-sm text-[#5b6f66]">
             <Link href="/herramientas" className="hover:text-[#153f2e]">Herramientas</Link>
+            <Link href="/diagnostico" className="hover:text-[#153f2e]">Diagnóstico 360°</Link>
             <Link href="/pro" className="hover:text-[#153f2e]">Growtella Pro</Link>
             <Link href="/cuenta" className="hover:text-[#153f2e]">Mi cuenta</Link>
             <Link href="/contacto" className="hover:text-[#153f2e]">Contacto</Link>
@@ -30,7 +31,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-[#e4ece7] px-5 py-5 text-center text-xs text-[#71857c]">
-        © {new Date().getFullYear()} Growtella. Todos los derechos reservados.
+        © {new Date().getFullYear()} Growtella. Hecho para tomar mejores decisiones.
       </div>
     </footer>
   );

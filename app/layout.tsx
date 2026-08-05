@@ -22,8 +22,9 @@ export const metadata: Metadata = {
     type: "website",
     locale: "es_AR",
     siteName: "Growtella",
+    images: [{ url: "/og-v2.png", width: 1731, height: 909, alt: "Growtella — Diagnóstico 360° para tu negocio" }],
   },
-  twitter: { card: "summary_large_image", title: "Growtella", description: siteConfig.description },
+  twitter: { card: "summary_large_image", title: "Growtella", description: siteConfig.description, images: ["/og-v2.png"] },
   robots: { index: true, follow: true },
   verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
     ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
@@ -41,7 +42,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <html lang="es" className={`${geistSans.variable} ${geistMono.variable} scroll-smooth antialiased`}>
+    <html lang="es" data-scroll-behavior="smooth" className={`${geistSans.variable} ${geistMono.variable} scroll-smooth antialiased`}>
       <body className="flex min-h-screen flex-col bg-white text-[#10291f]">
         <script
           type="application/ld+json"
