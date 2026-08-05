@@ -23,6 +23,7 @@
 ## Cuenta y producto
 
 - Probar registro, ingreso, recuperación de contraseña y cierre de sesión.
+- Guardar un diagnóstico, abrirlo desde Mi cuenta y actualizarlo.
 - Confirmar que el usuario vea el mismo plan y los mismos datos al abrir otra herramienta.
 - Probar límites, consumos e historial de IA con usuarios de prueba.
 - Probar compra, renovación y cancelación de Growtella Pro.

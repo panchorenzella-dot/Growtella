@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getSupabaseClient, hasSupabaseConfig } from "@/lib/supabase/client";
 
 type AnswerMap = Record<string, number>;
 type DimensionId = "finances" | "sales" | "offer" | "operations" | "direction";
@@ -214,11 +216,17 @@ function formatMoney(value: number, currency: "ARS" | "USD") {
 }
 
 export function BusinessPulse() {
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<AnswerMap>({});
   const [context, setContext] = useState<BusinessContext>(defaultContext);
   const [hydrated, setHydrated] = useState(false);
   const [showResume, setShowResume] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(!hasSupabaseConfig());
+  const [savedDiagnosticId, setSavedDiagnosticId] = useState<string | null>(null);
+  const [savingDiagnostic, setSavingDiagnostic] = useState(false);
+  const [diagnosticMessage, setDiagnosticMessage] = useState("");
   const dimensions = buildDimensions(context);
 
   useEffect(() => {
@@ -250,6 +258,28 @@ export function BusinessPulse() {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ step, answers, context }));
   }, [answers, context, hydrated, step]);
 
+  useEffect(() => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
+    let active = true;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      setUserId(data.session?.user.id ?? null);
+      setAuthReady(true);
+    });
+
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user.id ?? null);
+      setAuthReady(true);
+    });
+
+    return () => {
+      active = false;
+      data.subscription.unsubscribe();
+    };
+  }, []);
+
   const dimensionScores = Object.fromEntries(dimensions.map((dimension) => {
     const total = dimension.questions.reduce((sum, question) => sum + (answers[question.id] ?? 0), 0);
     return [dimension.id, Math.round((total / (dimension.questions.length * 3)) * 100)];
@@ -264,6 +294,12 @@ export function BusinessPulse() {
   );
   const priorities = [...dimensions].sort((a, b) => dimensionScores[a.id] - dimensionScores[b.id]).slice(0, 3);
   const maturity = getMaturity(overallScore);
+  const actionPlan = [
+    { week: "Semana 1", dimension: priorities[0], action: priorities[0].actions[0], tag: "Prioridad crítica" },
+    { week: "Semana 2", dimension: priorities[1], action: priorities[1].actions[0], tag: "Segundo frente" },
+    { week: "Semana 3", dimension: priorities[2], action: priorities[2].actions[0], tag: "Fortalecer base" },
+    { week: "Semana 4", dimension: priorities[0], action: priorities[0].actions[1], tag: "Medir y ajustar" },
+  ];
 
   const revenue = parseAmount(context.revenue);
   const fixedCosts = parseAmount(context.fixedCosts);
@@ -281,6 +317,46 @@ export function BusinessPulse() {
   const currentComplete = currentDimension ? currentDimension.questions.every((question) => answers[question.id] !== undefined) : true;
   const contextComplete = Boolean(context.businessType && context.channel && context.customer && context.team && context.stage && context.goal);
 
+  useEffect(() => {
+    if (!hydrated || !authReady) return;
+    const reportId = new URLSearchParams(window.location.search).get("report");
+    if (!reportId) return;
+    if (!userId) {
+      queueMicrotask(() => setDiagnosticMessage("Iniciá sesión para abrir este diagnóstico guardado."));
+      return;
+    }
+
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+    let active = true;
+    queueMicrotask(() => setDiagnosticMessage("Abriendo tu diagnóstico guardado..."));
+
+    void supabase
+      .from("business_diagnostics")
+      .select("id,context,answers")
+      .eq("id", reportId)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error || !data) {
+          setDiagnosticMessage("No encontramos ese diagnóstico o no pertenece a tu cuenta.");
+          return;
+        }
+        const storedContext = data.context && typeof data.context === "object" ? data.context as Partial<BusinessContext> : {};
+        const storedAnswers = data.answers && typeof data.answers === "object" ? data.answers as AnswerMap : {};
+        setContext({ ...defaultContext, ...storedContext });
+        setAnswers(storedAnswers);
+        setSavedDiagnosticId(data.id);
+        setStep(7);
+        setShowResume(false);
+        setDiagnosticMessage("Diagnóstico recuperado desde tu cuenta.");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [authReady, hydrated, userId]);
+
   function updateProfile(field: keyof Pick<BusinessContext, "businessType" | "channel" | "customer" | "team" | "stage" | "goal">, value: string) {
     setContext((current) => ({ ...current, [field]: value }));
     if (Object.keys(answers).length) setAnswers({});
@@ -292,12 +368,74 @@ export function BusinessPulse() {
     requestAnimationFrame(() => document.getElementById("diagnostic-top")?.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
 
+  async function saveDiagnostic() {
+    const supabase = getSupabaseClient();
+    if (!supabase || !userId) {
+      router.push("/cuenta?next=%2Fdiagnostico");
+      return;
+    }
+
+    setSavingDiagnostic(true);
+    setDiagnosticMessage(savedDiagnosticId ? "Actualizando tu diagnóstico..." : "Guardando tu diagnóstico...");
+
+    const businessLabel = businessTypes.find((item) => item.id === context.businessType)?.label ?? "Negocio";
+    const payload = {
+      user_id: userId,
+      title: `${businessLabel} · ${maturity.title}`,
+      context,
+      answers,
+      scores: dimensionScores,
+      financials: {
+        currency: context.currency,
+        revenue,
+        fixed_costs: fixedCosts,
+        variable_costs: variableCosts,
+        operating_result: operatingResult,
+        net_margin: netMargin,
+        break_even: breakEven,
+        target_revenue: targetRevenue,
+        revenue_gap: revenueGap,
+        growth_needed: growthNeeded,
+      },
+      action_plan: actionPlan.map((item) => ({
+        week: item.week,
+        dimension: item.dimension.id,
+        dimension_title: item.dimension.shortTitle,
+        action: item.action,
+      })),
+      overall_score: overallScore,
+      maturity_title: maturity.title,
+      application_version: 3,
+    };
+
+    const result = savedDiagnosticId
+      ? await supabase.from("business_diagnostics").update(payload).eq("id", savedDiagnosticId).select("id").single()
+      : await supabase.from("business_diagnostics").insert(payload).select("id").single();
+
+    setSavingDiagnostic(false);
+    if (result.error || !result.data) {
+      setDiagnosticMessage(
+        result.error?.code === "PGRST205"
+          ? "La cuenta está conectada, pero todavía falta activar la tabla de diagnósticos en Supabase."
+          : "No pudimos guardar el diagnóstico. Revisá tu conexión y volvé a intentar.",
+      );
+      return;
+    }
+
+    setSavedDiagnosticId(result.data.id);
+    window.history.replaceState({}, "", `/diagnostico?report=${result.data.id}`);
+    setDiagnosticMessage(savedDiagnosticId ? "Diagnóstico actualizado en tu cuenta." : "Diagnóstico guardado en tu cuenta.");
+  }
+
   function reset() {
     window.localStorage.removeItem(STORAGE_KEY);
+    window.history.replaceState({}, "", "/diagnostico");
     setAnswers({});
     setContext(defaultContext);
     setStep(0);
     setShowResume(false);
+    setSavedDiagnosticId(null);
+    setDiagnosticMessage("");
   }
 
   if (!hydrated) {
@@ -368,12 +506,7 @@ export function BusinessPulse() {
         <div className="border-t border-[#e1ebe5] p-6 sm:p-10">
           <div className="max-w-3xl"><p className="eyebrow">Plan personalizado de 30 días</p><h3 className="mt-2 text-3xl font-black tracking-[-.04em] text-[#153f2e]">Tres prioridades, cuatro semanas, cero ruido.</h3><p className="mt-3 leading-7 text-[#5f7369]">El orden se define por tus áreas con menor puntaje. Completá una acción antes de agregar otra.</p></div>
           <div className="mt-8 grid gap-4 lg:grid-cols-4">
-            {[
-              { week: "Semana 1", dimension: priorities[0], action: priorities[0].actions[0], tag: "Prioridad crítica" },
-              { week: "Semana 2", dimension: priorities[1], action: priorities[1].actions[0], tag: "Segundo frente" },
-              { week: "Semana 3", dimension: priorities[2], action: priorities[2].actions[0], tag: "Fortalecer base" },
-              { week: "Semana 4", dimension: priorities[0], action: priorities[0].actions[1], tag: "Medir y ajustar" },
-            ].map((item, index) => (
+            {actionPlan.map((item, index) => (
               <article key={item.week} className={`rounded-2xl border p-5 ${index === 0 ? "border-[#a8cdb7] bg-[#edf8f1]" : "border-[#dce8e0] bg-white"}`}>
                 <div className="flex items-center justify-between"><span className="font-mono text-xs font-black text-[#3a865f]">0{index + 1}</span><span className="text-[9px] font-black uppercase tracking-[.11em] text-[#7b8c84]">{item.tag}</span></div>
                 <p className="mt-5 text-xs font-black text-[#2c7651]">{item.week} · {item.dimension.shortTitle}</p>
@@ -384,9 +517,20 @@ export function BusinessPulse() {
         </div>
 
         <div className="flex flex-col gap-4 border-t border-[#e1ebe5] bg-[#fbfcfb] p-6 sm:flex-row sm:items-center sm:justify-between sm:px-10">
-          <div><p className="text-xs font-black text-[#294739]">Privado por diseño</p><p className="mt-1 text-xs text-[#71837b]">El cálculo ocurre en tu navegador. Growtella no recibe tus respuestas ni tus números.</p></div>
+          <div>
+            <p className="text-xs font-black text-[#294739]">{savedDiagnosticId ? "Guardado en tu cuenta" : "Privado por diseño"}</p>
+            <p className="mt-1 text-xs text-[#71837b]">{savedDiagnosticId ? "Solo tu usuario puede consultar o modificar este informe." : "Permanece en este navegador hasta que elijas guardarlo en tu cuenta."}</p>
+            {diagnosticMessage && <p role="status" className="mt-2 text-xs font-bold text-[#2b7651]">{diagnosticMessage}</p>}
+          </div>
           <div className="flex flex-wrap gap-2 print:hidden">
             <button type="button" onClick={() => window.print()} className="focus-ring rounded-full border border-[#c9dcd1] bg-white px-4 py-2.5 text-xs font-black text-[#234638] hover:bg-[#f3f8f5]">Guardar informe en PDF</button>
+            {userId ? (
+              <button type="button" disabled={savingDiagnostic} onClick={() => void saveDiagnostic()} className="focus-ring rounded-full border border-[#9fc8af] bg-[#eaf7ef] px-4 py-2.5 text-xs font-black text-[#226b48] hover:bg-[#dff2e6] disabled:cursor-wait disabled:opacity-60">
+                {savingDiagnostic ? "Guardando..." : savedDiagnosticId ? "Actualizar en mi cuenta" : "Guardar en mi cuenta"}
+              </button>
+            ) : (
+              <a href="/cuenta?next=%2Fdiagnostico" className="focus-ring rounded-full border border-[#9fc8af] bg-[#eaf7ef] px-4 py-2.5 text-xs font-black text-[#226b48] hover:bg-[#dff2e6]">Iniciar sesión para guardar</a>
+            )}
             <button type="button" onClick={reset} className="focus-ring rounded-full bg-[#153f2e] px-4 py-2.5 text-xs font-black text-white hover:bg-[#0d3223]">Hacer uno nuevo</button>
           </div>
         </div>

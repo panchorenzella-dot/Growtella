@@ -24,8 +24,11 @@ La cuenta central reutiliza las tablas y funciones que ya existen en Calculadora
 - `get_my_usage_summary()`: límites, consumos y fecha de renovación del usuario.
 - `saved_scenarios`: escenarios guardados.
 - `ai_conversations` y `ai_messages`: historial de análisis y conversaciones.
+- `business_diagnostics`: diagnóstico adaptativo, puntajes, foto financiera y plan de 30 días guardados por el usuario.
 
 Las tablas deben utilizar el identificador de usuario de Supabase Auth y políticas de seguridad para que cada persona solo pueda acceder a sus propios datos.
+
+El diagnóstico se calcula primero en el navegador. Solo se envía a Supabase cuando el usuario elige **Guardar en mi cuenta**. La tabla `business_diagnostics` tiene RLS para lectura, creación, actualización y eliminación limitada a `auth.uid()`.
 
 ## Regla para los créditos
 

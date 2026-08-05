@@ -27,8 +27,16 @@ type ActivityItem = {
   detail: string;
   date: string;
   href: string;
-  kind: "analysis" | "scenario";
+  kind: "analysis" | "scenario" | "diagnostic";
 };
+
+function allowedNextPath(value: string | null) {
+  return value === "/pro" || value === "/diagnostico" ? value : null;
+}
+
+function currentNextPath() {
+  return allowedNextPath(new URLSearchParams(window.location.search).get("next"));
+}
 
 const FREE_PLAN: PlanInfo = {
   plan: "free",
@@ -133,6 +141,7 @@ export function AccountCenter() {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [scenarioCount, setScenarioCount] = useState(0);
   const [analysisCount, setAnalysisCount] = useState(0);
+  const [diagnosticCount, setDiagnosticCount] = useState(0);
   const [profile, setProfile] = useState(profileFromSession(null));
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -143,11 +152,12 @@ export function AccountCenter() {
     if (!supabase) return;
     setDataLoading(true);
 
-    const [planResult, usageResult, scenariosResult, analysesResult] = await Promise.all([
+    const [planResult, usageResult, scenariosResult, analysesResult, diagnosticsResult] = await Promise.all([
       supabase.from("user_plans").select("plan,status,current_period_end,cancel_at_period_end,provider").maybeSingle(),
       supabase.rpc("get_my_usage_summary"),
       supabase.from("saved_scenarios").select("id,title,calculator_type,created_at", { count: "exact" }).order("created_at", { ascending: false }).limit(5),
       supabase.from("ai_conversations").select("id,title,calculator_name,updated_at", { count: "exact" }).order("updated_at", { ascending: false }).limit(5),
+      supabase.from("business_diagnostics").select("id,title,overall_score,created_at", { count: "exact" }).order("created_at", { ascending: false }).limit(5),
     ]);
 
     const activePlan = effectivePlan(planResult.data as PlanInfo | null);
@@ -156,6 +166,7 @@ export function AccountCenter() {
     setUsage(!usageResult.error && usageData?.length ? usageData : defaultUsage(activePlan.plan));
     setScenarioCount(scenariosResult.count ?? scenariosResult.data?.length ?? 0);
     setAnalysisCount(analysesResult.count ?? analysesResult.data?.length ?? 0);
+    setDiagnosticCount(diagnosticsResult.count ?? diagnosticsResult.data?.length ?? 0);
 
     const scenarioActivities: ActivityItem[] = (scenariosResult.data ?? []).map((item) => ({
       id: item.id,
@@ -173,9 +184,17 @@ export function AccountCenter() {
       href: `${siteConfig.calculatorUrl}/perfil/analisis/${item.id}`,
       kind: "analysis",
     }));
-    setActivities([...scenarioActivities, ...analysisActivities].sort((a, b) => Date.parse(b.date) - Date.parse(a.date)).slice(0, 5));
+    const diagnosticActivities: ActivityItem[] = (diagnosticsResult.data ?? []).map((item) => ({
+      id: item.id,
+      title: item.title || "Diagnóstico de negocio",
+      detail: `Índice Growtella ${item.overall_score}/100`,
+      date: item.created_at,
+      href: `/diagnostico?report=${item.id}`,
+      kind: "diagnostic",
+    }));
+    setActivities([...scenarioActivities, ...analysisActivities, ...diagnosticActivities].sort((a, b) => Date.parse(b.date) - Date.parse(a.date)).slice(0, 5));
 
-    const errors = [planResult.error, usageResult.error, scenariosResult.error, analysesResult.error].filter(Boolean);
+    const errors = [planResult.error, usageResult.error, scenariosResult.error, analysesResult.error, diagnosticsResult.error].filter(Boolean);
     if (errors.length) {
       setMessage("La cuenta está conectada, pero falta aplicar alguna migración de Supabase para mostrar todos los datos.");
     }
@@ -203,6 +222,7 @@ export function AccountCenter() {
         setPlan(FREE_PLAN);
         setUsage(defaultUsage());
         setActivities([]);
+        setDiagnosticCount(0);
       }
     });
 
@@ -216,7 +236,8 @@ export function AccountCenter() {
     const subscriptionId = params.get("subscription_id");
 
     if (paypalStatus !== "success") {
-      if (params.get("next") === "/pro") router.replace("/pro");
+      const nextPath = allowedNextPath(params.get("next"));
+      if (nextPath) router.replace(nextPath);
       return;
     }
 
@@ -283,7 +304,8 @@ export function AccountCenter() {
         setMessage("Tu contraseña se actualizó correctamente.");
         setMode("login");
       } else if (mode === "signup") {
-        const next = new URLSearchParams(window.location.search).get("next") === "/pro" ? "?next=/pro" : "";
+        const nextPath = currentNextPath();
+        const next = nextPath ? `?next=${encodeURIComponent(nextPath)}` : "";
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -294,11 +316,13 @@ export function AccountCenter() {
         });
         if (error) throw error;
         setMessage(data.session ? "Tu cuenta Growtella ya está lista." : "Revisá tu email para confirmar la cuenta.");
+        if (data.session && nextPath) router.push(nextPath);
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         setMessage("Ingresaste correctamente.");
-        if (new URLSearchParams(window.location.search).get("next") === "/pro") router.push("/pro");
+        const nextPath = currentNextPath();
+        if (nextPath) router.push(nextPath);
       }
     } catch (error) {
       setMessage(friendlyAuthError(error instanceof Error ? error.message : "No pudimos completar el acceso."));
@@ -312,7 +336,8 @@ export function AccountCenter() {
     if (!supabase) return;
     setSaving(true);
     setMessage("Abriendo Google...");
-    const next = new URLSearchParams(window.location.search).get("next") === "/pro" ? "?next=/pro" : "";
+    const nextPath = currentNextPath();
+    const next = nextPath ? `?next=${encodeURIComponent(nextPath)}` : "";
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/cuenta${next}`, skipBrowserRedirect: true },
@@ -396,7 +421,7 @@ export function AccountCenter() {
             <p className="text-xs font-black uppercase tracking-[.15em] text-[#9de0b8]">Todo conectado</p>
             <h3 className="mt-4 text-3xl font-black tracking-tight">Una identidad. Todas tus herramientas.</h3>
             <div className="mt-8 grid gap-4">
-              {["Plan Pro reconocido en toda la plataforma", "Usos de IA compartidos y protegidos", "Escenarios e historial en un mismo lugar", "Perfil que se actualiza en todas las aplicaciones"].map((item) => <div key={item} className="flex items-start gap-3 rounded-2xl bg-white/[.07] p-4 text-sm leading-6 text-white/82"><span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#8bdbab] text-xs font-black text-[#153f2e]">✓</span>{item}</div>)}
+              {["Plan Pro reconocido en toda la plataforma", "Diagnósticos guardados y protegidos", "Escenarios e historial en un mismo lugar", "Perfil que se actualiza en todas las aplicaciones"].map((item) => <div key={item} className="flex items-start gap-3 rounded-2xl bg-white/[.07] p-4 text-sm leading-6 text-white/82"><span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#8bdbab] text-xs font-black text-[#153f2e]">✓</span>{item}</div>)}
             </div>
           </div>
         </div>
@@ -433,7 +458,7 @@ export function AccountCenter() {
             <section className="rounded-3xl border border-[#dce7e0] p-6 sm:p-7">
               <div className="flex items-end justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[.13em] text-[#6b8276]">Actividad compartida</p><h3 className="mt-2 text-2xl font-black tracking-tight text-[#153f2e]">Continuá donde lo dejaste</h3></div>{dataLoading && <span className="text-xs font-bold text-[#7b8c84]">Actualizando...</span>}</div>
               <div className="mt-5 divide-y divide-[#e5ede8]">
-                {activities.length ? activities.map((item) => <a key={`${item.kind}-${item.id}`} href={item.href} className="flex items-center gap-4 py-4 first:pt-0 last:pb-0 group"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#edf7f0] text-[#337453]">{item.kind === "analysis" ? "✦" : "⌁"}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-black text-[#294739] group-hover:text-[#216945]">{item.title}</p><p className="mt-1 truncate text-xs text-[#7a8b83]">{item.detail} · {formatDate(item.date)}</p></div><span className="text-[#4a8065]">→</span></a>) : <div className="rounded-2xl bg-[#f6faf7] p-7 text-center"><p className="text-sm text-[#61746a]">Todavía no guardaste actividad.</p><a href={siteConfig.calculatorUrl} className="mt-4 inline-flex rounded-full bg-[#153f2e] px-4 py-2.5 text-xs font-black text-white">Empezar con la calculadora</a></div>}
+                {activities.length ? activities.map((item) => <a key={`${item.kind}-${item.id}`} href={item.href} className="flex items-center gap-4 py-4 first:pt-0 last:pb-0 group"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#edf7f0] text-[#337453]">{item.kind === "analysis" ? "✦" : item.kind === "diagnostic" ? "◎" : "⌁"}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-black text-[#294739] group-hover:text-[#216945]">{item.title}</p><p className="mt-1 truncate text-xs text-[#7a8b83]">{item.detail} · {formatDate(item.date)}</p></div><span className="text-[#4a8065]">→</span></a>) : <div className="rounded-2xl bg-[#f6faf7] p-7 text-center"><p className="text-sm text-[#61746a]">Todavía no guardaste actividad.</p><a href="/diagnostico" className="mt-4 inline-flex rounded-full bg-[#153f2e] px-4 py-2.5 text-xs font-black text-white">Crear mi primer diagnóstico</a></div>}
               </div>
             </section>
 
@@ -444,7 +469,7 @@ export function AccountCenter() {
           </div>
 
           <section className="mt-9">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-black uppercase tracking-[.13em] text-[#6b8276]">Tus aplicaciones</p><h3 className="mt-2 text-2xl font-black tracking-tight text-[#153f2e]">Una cuenta para todo Growtella</h3></div><p className="text-sm text-[#718078]">{analysisCount} análisis · {scenarioCount} escenarios</p></div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-black uppercase tracking-[.13em] text-[#6b8276]">Tus aplicaciones</p><h3 className="mt-2 text-2xl font-black tracking-tight text-[#153f2e]">Una cuenta para todo Growtella</h3></div><p className="text-sm text-[#718078]">{diagnosticCount} diagnósticos · {analysisCount} análisis · {scenarioCount} escenarios</p></div>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               {products.map((product, index) => <article key={product.name} className="rounded-2xl border border-[#dce7e0] p-5"><div className="flex items-start gap-4"><span className={`grid size-11 shrink-0 place-items-center rounded-xl ${index === 0 ? "bg-[#153f2e] text-white" : "bg-[#e9f6ee] text-[#28734e]"}`}>{index === 0 ? "⌁" : "✦"}</span><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-3"><h4 className="font-black text-[#244437]">{product.name}</h4><span className="text-[10px] font-black uppercase tracking-[.1em] text-[#668176]">{product.status === "available" ? "Activa" : "Próximamente"}</span></div><p className="mt-2 text-sm leading-6 text-[#687a71]">{product.description}</p>{product.status === "available" ? <a href={product.href} className="mt-4 inline-flex text-xs font-black text-[#246d4a]">Abrir aplicación →</a> : <span aria-disabled="true" className="mt-4 inline-flex text-xs font-black text-[#7a897f]">Próximamente</span>}</div></div></article>)}
             </div>
