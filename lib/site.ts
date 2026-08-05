@@ -41,14 +41,14 @@ export const products: Product[] = [
   {
     name: "Diagnóstico 360°",
     description:
-      "Evaluá 15 indicadores, sumá tus números y recibí un mapa de madurez con un plan de 30 días.",
+      "Recibí preguntas según tu tipo de negocio, sumá tus números y obtené un plan de 30 días.",
     eyebrow: "Nuevo · Informe completo",
     href: "/diagnostico",
     status: "available",
     accent: "mint",
     price: "Gratis",
     priceDetail: "sin registro",
-    features: ["15 indicadores estratégicos", "Margen y punto de equilibrio", "Plan personalizado de 30 días"],
+    features: ["Preguntas adaptadas a tu negocio", "Margen y punto de equilibrio", "Plan personalizado de 30 días"],
   },
   {
     name: "Presupuestos Inteligentes",

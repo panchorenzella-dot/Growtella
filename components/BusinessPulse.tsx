@@ -1,16 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 type AnswerMap = Record<string, number>;
 type DimensionId = "finances" | "sales" | "offer" | "operations" | "direction";
 type BusinessContext = {
+  businessType: string;
+  channel: string;
+  customer: string;
+  team: string;
   stage: string;
   goal: string;
   currency: "ARS" | "USD";
   revenue: string;
   fixedCosts: string;
   variableCosts: string;
+  targetRevenue: string;
 };
 
 type DiagnosticQuestion = {
@@ -30,7 +35,33 @@ type Dimension = {
   actions: readonly [string, string, string];
 };
 
-const STORAGE_KEY = "growtella-business-diagnostic-v2";
+const STORAGE_KEY = "growtella-business-diagnostic-v3";
+
+const businessTypes = [
+  { id: "service", label: "Servicios", detail: "Vendés tiempo, trabajo o experiencia", icon: "◇" },
+  { id: "product", label: "Productos", detail: "Fabricás o revendés productos", icon: "□" },
+  { id: "food", label: "Comida y bebidas", detail: "Gastronomía, producción o pedidos", icon: "○" },
+  { id: "digital", label: "Digital", detail: "Cursos, software o contenido", icon: "⌁" },
+];
+
+const channels = [
+  { id: "inperson", label: "Presencial o local" },
+  { id: "online", label: "Online" },
+  { id: "both", label: "Presencial y online" },
+  { id: "order", label: "Por pedido o a domicilio" },
+];
+
+const customers = [
+  { id: "people", label: "Personas" },
+  { id: "business", label: "Empresas" },
+  { id: "both", label: "Personas y empresas" },
+];
+
+const teams = [
+  { id: "solo", label: "Trabajo solo/a" },
+  { id: "small", label: "Somos 2 a 5" },
+  { id: "growing", label: "Somos 6 o más" },
+];
 
 const stages = [
   { id: "idea", label: "Idea o validación", detail: "Todavía estoy probando el modelo" },
@@ -46,75 +77,113 @@ const goals = [
   { id: "scale", label: "Prepararme para crecer", icon: "◎" },
 ];
 
-const dimensions: readonly Dimension[] = [
-  {
-    id: "finances",
-    number: "01",
-    title: "Salud financiera",
-    shortTitle: "Finanzas",
-    description: "Mide cuánto control tenés sobre precios, rentabilidad y caja.",
-    questions: [
-      { id: "margin", label: "¿Conocés el margen real de lo que vendés?", helper: "No alcanza con saber cuánto entra: importa cuánto queda.", options: ["No lo conozco", "Tengo una estimación", "Lo calculo a veces", "Lo sigo todos los meses"] },
-      { id: "cash", label: "¿Cuánto podés anticipar tu caja?", helper: "La previsión evita que un buen negocio se quede sin aire.", options: ["Veo día a día", "Anticipo algunas semanas", "Proyecto un mes", "Proyecto 3 meses o más"] },
-      { id: "pricing", label: "¿Cómo definís tus precios?", helper: "Un precio sano cubre costos, tiempo, riesgo y ganancia.", options: ["Copio o improviso", "Sumo los costos básicos", "Incluyo margen y tiempo", "Reviso y pruebo regularmente"] },
-    ],
-    actions: ["Calculá el margen de tus tres productos o servicios principales.", "Armá una proyección simple de caja para las próximas ocho semanas.", "Definí un criterio de revisión de precios y una fecha para aplicarlo."],
-  },
-  {
-    id: "sales",
-    number: "02",
-    title: "Motor comercial",
-    shortTitle: "Ventas",
-    description: "Evalúa si tus ventas dependen de la suerte o de un sistema repetible.",
-    questions: [
-      { id: "leads", label: "¿Generás oportunidades nuevas cada semana?", helper: "Un flujo constante reduce la ansiedad de empezar de cero.", options: ["Solo cuando necesito vender", "De forma irregular", "Casi todas las semanas", "Tengo un sistema constante"] },
-      { id: "conversion", label: "¿Conocés tu tasa de conversión?", helper: "Medir cuántas conversaciones terminan en venta permite mejorar.", options: ["No la mido", "Tengo una idea", "La reviso a veces", "La sigo por canal y período"] },
-      { id: "followup", label: "¿Cómo hacés seguimiento de potenciales clientes?", helper: "Muchas ventas se pierden por falta de seguimiento, no por falta de interés.", options: ["Depende de mi memoria", "Uso notas o mensajes", "Tengo una lista ordenada", "Tengo etapas y próximos pasos"] },
-    ],
-    actions: ["Elegí un canal principal y fijá una meta semanal de oportunidades.", "Registrá conversaciones, propuestas y ventas durante cuatro semanas.", "Creá una secuencia de seguimiento con fecha y próximo paso para cada contacto."],
-  },
-  {
-    id: "offer",
-    number: "03",
-    title: "Oferta y cliente",
-    shortTitle: "Oferta",
-    description: "Analiza qué tan fácil es entender, elegir y recomendar lo que vendés.",
-    questions: [
-      { id: "customer", label: "¿Tenés claro cuál es tu mejor tipo de cliente?", helper: "Hablarle a todos suele hacer que nadie se sienta elegido.", options: ["Le vendo a cualquiera", "Tengo una idea amplia", "Definí un perfil concreto", "Sé quién compra y por qué"] },
-      { id: "value", label: "¿Tu propuesta se entiende en una frase?", helper: "Una propuesta clara conecta cliente, problema y resultado.", options: ["Me cuesta explicarla", "Necesito bastante contexto", "Se entiende con ejemplos", "Es clara y específica"] },
-      { id: "validation", label: "¿Usás la voz del cliente para mejorar?", helper: "Las mejores ofertas se construyen con evidencia, no solo intuición.", options: ["Casi nunca pregunto", "Recibo comentarios sueltos", "Pido feedback", "Registro patrones y los aplico"] },
-    ],
-    actions: ["Escribí en una frase a quién ayudás, qué resolvés y qué resultado entregás.", "Entrevistá a tres clientes y anotá las palabras exactas que usan.", "Convertí tu servicio en una oferta con alcance, resultado, plazo y precio claros."],
-  },
-  {
-    id: "operations",
-    number: "04",
-    title: "Operaciones y tiempo",
-    shortTitle: "Operaciones",
-    description: "Detecta cuánto depende el negocio de tu memoria y esfuerzo diario.",
-    questions: [
-      { id: "process", label: "¿Tus tareas repetitivas tienen un proceso?", helper: "Documentar lo repetible libera atención para decidir mejor.", options: ["Todo está en mi cabeza", "Tengo notas dispersas", "Documenté lo importante", "Los procesos se revisan y mejoran"] },
-      { id: "time", label: "¿Sabés en qué se va tu tiempo?", helper: "Estar ocupado no siempre significa avanzar.", options: ["Reacciono a lo urgente", "Tengo una lista general", "Planifico la semana", "Protejo tiempo por prioridad"] },
-      { id: "delivery", label: "¿Cumplís plazos sin correr al final?", helper: "La entrega previsible mejora margen, reputación y capacidad.", options: ["Casi siempre corro", "Depende de la semana", "La mayoría de las veces", "Tengo capacidad y plazos controlados"] },
-    ],
-    actions: ["Documentá la tarea repetitiva que más tiempo te consume.", "Separá en tu agenda bloques para vender, entregar y mejorar.", "Definí un límite de capacidad semanal y usalo al prometer plazos."],
-  },
-  {
-    id: "direction",
-    number: "05",
-    title: "Dirección y foco",
-    shortTitle: "Dirección",
-    description: "Mide si tus decisiones responden a una prioridad concreta.",
-    questions: [
-      { id: "goal", label: "¿Tenés una meta medible para los próximos 30 días?", helper: "Una buena meta tiene número, fecha y responsable.", options: ["Tengo muchas prioridades", "Tengo una intención", "Tengo una meta definida", "La meta guía mi semana"] },
-      { id: "metrics", label: "¿Qué tan seguido revisás indicadores?", helper: "Pocos números relevantes permiten corregir antes.", options: ["No tengo indicadores", "Miro ventas o saldo", "Reviso algunos cada mes", "Tengo un tablero semanal"] },
-      { id: "decisions", label: "¿Cómo decidís qué dejar de hacer?", helper: "Crecer también exige decirle que no a lo que distrae.", options: ["Intento hacer todo", "Dejo lo que no llego", "Priorizo según impacto", "Reviso y elimino activamente"] },
-    ],
-    actions: ["Elegí una meta de 30 días y un indicador que confirme el avance.", "Creá una revisión semanal de 20 minutos con cuatro métricas clave.", "Hacé una lista de tareas y proyectos que vas a pausar este mes."],
-  },
-];
+function buildDimensions(context: BusinessContext): readonly Dimension[] {
+  const type = context.businessType || "service";
+  const isTeam = context.team && context.team !== "solo";
+  const saleUnit = type === "service" ? "servicio" : type === "food" ? "pedido" : type === "digital" ? "venta" : "producto";
+  const marginAction = type === "service"
+    ? "Calculá horas, costos y margen de tus tres servicios principales."
+    : type === "food"
+      ? "Calculá el costo y el margen de los diez productos más vendidos."
+      : type === "digital"
+        ? "Medí el margen de cada producto digital incluyendo publicidad y comisiones."
+        : "Calculá costo y margen de los diez productos más vendidos.";
+  const salesQuestion = context.customer === "business"
+    ? { label: "¿Seguís cada propuesta?", helper: "Cada propuesta necesita próximo paso.", options: ["No", "Con notas", "Con fechas", "Sí, con etapas"] as const }
+    : { label: "¿Sabés cuántos clientes vuelven?", helper: "La recompra muestra lealtad real.", options: ["No", "Tengo una idea", "Lo mido a veces", "Sí, todos los meses"] as const };
+  const channelQuestion = context.channel === "online"
+    ? { label: "¿Sabés qué canal vende más?", helper: "Redes, web, anuncios o referidos.", options: ["No", "Lo intuyo", "Lo reviso", "Sí, lo comparo"] as const }
+    : context.channel === "inperson"
+      ? { label: "¿Sabés qué días vendés más?", helper: "Días y horarios cambian decisiones.", options: ["No", "Lo intuyo", "Lo anoto", "Sí, lo comparo"] as const }
+      : context.channel === "both"
+        ? { label: "¿Comparás online y presencial?", helper: "Cada canal debe justificar su esfuerzo.", options: ["No", "A veces", "Casi siempre", "Sí, cada mes"] as const }
+        : { label: "¿Medís cuántos pedidos se repiten?", helper: "La repetición da previsibilidad.", options: ["No", "Lo intuyo", "Lo anoto", "Sí, cada mes"] as const };
 
-const defaultContext: BusinessContext = { stage: "", goal: "", currency: "ARS", revenue: "", fixedCosts: "", variableCosts: "" };
+  const offerQuestions: Record<string, readonly DiagnosticQuestion[]> = {
+    service: [
+      { id: "offer_1", label: "¿Tu servicio tiene un alcance claro?", helper: "Qué incluye y qué no.", options: ["No", "Depende del cliente", "Casi siempre", "Sí, está definido"] },
+      { id: "offer_2", label: "¿Calculás horas antes de cotizar?", helper: "El tiempo también es costo.", options: ["No", "Estimo rápido", "Casi siempre", "Sí, lo registro"] },
+      { id: "offer_3", label: "¿Tenés precios o paquetes definidos?", helper: "Reduce dudas y mejora la venta.", options: ["No", "Algunos", "Casi todos", "Sí, están claros"] },
+    ],
+    product: [
+      { id: "offer_1", label: "¿Sabés qué producto deja más ganancia?", helper: "No siempre es el que más vende.", options: ["No", "Lo intuyo", "Lo calculé", "Sí, lo reviso"] },
+      { id: "offer_2", label: "¿Controlás el stock?", helper: "Faltantes y exceso cuestan dinero.", options: ["No", "A mano", "Casi siempre", "Sí, está actualizado"] },
+      { id: "offer_3", label: "¿Actualizás precios cuando suben costos?", helper: "Protegé el margen a tiempo.", options: ["Tarde", "A veces", "Casi siempre", "Sí, con una regla"] },
+    ],
+    food: [
+      { id: "offer_1", label: "¿Conocés el costo de cada producto?", helper: "Incluí ingredientes y empaque.", options: ["No", "De algunos", "De casi todos", "Sí, actualizado"] },
+      { id: "offer_2", label: "¿Medís desperdicios?", helper: "Lo que se pierde baja el margen.", options: ["No", "A ojo", "A veces", "Sí, cada semana"] },
+      { id: "offer_3", label: "¿Sabés qué conviene impulsar?", helper: "Venta y margen deben mirarse juntos.", options: ["No", "Lo intuyo", "Lo calculé", "Sí, lo reviso"] },
+    ],
+    digital: [
+      { id: "offer_1", label: "¿Medís cuántos visitantes compran?", helper: "Conversión de visita a venta.", options: ["No", "A veces", "Casi siempre", "Sí, por canal"] },
+      { id: "offer_2", label: "¿Sabés cuánto cuesta conseguir un cliente?", helper: "Incluí anuncios y comisiones.", options: ["No", "Lo estimo", "Lo calculé", "Sí, lo sigo"] },
+      { id: "offer_3", label: "¿Tus clientes vuelven o renuevan?", helper: "La retención sostiene el crecimiento.", options: ["No lo sé", "Pocos", "Una parte", "Sí, lo mido"] },
+    ],
+  };
+
+  return [
+    {
+      id: "finances", number: "01", title: "Números del negocio", shortTitle: "Finanzas", description: `Preguntas para un negocio de ${businessTypes.find((item) => item.id === type)?.label.toLowerCase() ?? "servicios"}.`,
+      questions: [
+        { id: "finance_1", label: `¿Sabés cuánto ganás por ${saleUnit}?`, helper: "Después de todos los costos.", options: ["No", "Lo estimo", "Lo calculé", "Sí, lo actualizo"] },
+        { id: "finance_2", label: "¿Conocés tus costos mensuales?", helper: "Fijos y variables por separado.", options: ["No", "Solo algunos", "Casi todos", "Sí, los reviso"] },
+        { id: "finance_3", label: "¿Separás la plata del negocio?", helper: "Cuenta y gastos separados.", options: ["No", "A veces", "Casi siempre", "Sí, totalmente"] },
+      ],
+      actions: [marginAction, "Separá costos fijos, variables y gastos personales.", "Proyectá caja para las próximas ocho semanas."],
+    },
+    {
+      id: "sales", number: "02", title: "Ventas y clientes", shortTitle: "Ventas", description: `Adaptado a ventas ${channels.find((item) => item.id === context.channel)?.label.toLowerCase() ?? "del negocio"}.`,
+      questions: [
+        { id: "sales_1", label: "¿Tenés ventas todas las semanas?", helper: "Buscamos constancia, no un mes aislado.", options: ["No", "Algunas semanas", "Casi todas", "Sí, son previsibles"] },
+        { id: "sales_2", ...salesQuestion },
+        { id: "sales_3", ...channelQuestion },
+      ],
+      actions: [
+        context.channel === "online" ? "Elegí el canal online que mejor convierte y fijá una meta semanal." : context.channel === "inperson" ? "Registrá ventas por día y horario durante cuatro semanas." : "Compará ventas, margen y esfuerzo de cada canal.",
+        context.customer === "business" ? "Asigná fecha y próximo paso a cada propuesta abierta." : "Creá una acción concreta para que los clientes vuelvan.",
+        "Registrá oportunidades, ventas y motivos de pérdida cada semana.",
+      ],
+    },
+    {
+      id: "offer", number: "03", title: type === "service" ? "Servicio y propuesta" : type === "food" ? "Menú y rentabilidad" : type === "digital" ? "Producto digital" : "Productos y stock", shortTitle: "Oferta", description: "Preguntas específicas para lo que vendés.",
+      questions: offerQuestions[type],
+      actions: type === "service"
+        ? ["Definí alcance, plazo y precio de tus tres servicios principales.", "Medí horas reales de cada trabajo durante un mes.", "Creá una propuesta base que puedas adaptar sin empezar de cero."]
+        : type === "food"
+          ? ["Costeá cada producto incluyendo desperdicio y empaque.", "Marcá los productos de alto margen que querés impulsar.", "Revisá precios cada vez que cambien insumos importantes."]
+          : type === "digital"
+            ? ["Medí conversión y costo de adquisición por canal.", "Elegí una mejora que aumente activación o recompra.", "Compará ingresos recurrentes con cancelaciones cada mes."]
+            : ["Ordená productos por ventas, margen y rotación.", "Definí mínimos de stock para los productos clave.", "Creá una regla simple para actualizar precios."],
+    },
+    {
+      id: "operations", number: "04", title: isTeam ? "Equipo y operación" : "Tiempo y operación", shortTitle: "Operaciones", description: isTeam ? "Cómo trabaja y entrega el equipo." : "Cómo usás tu tiempo y repetís el trabajo.",
+      questions: [
+        { id: "ops_1", label: isTeam ? "¿Cada persona sabe qué debe hacer?" : "¿Tu semana tiene bloques de trabajo?", helper: isTeam ? "Responsables y resultados claros." : "Vender, entregar y administrar.", options: ["No", "A veces", "Casi siempre", "Sí, está claro"] },
+        { id: "ops_2", label: "¿Los pasos importantes están escritos?", helper: "Para repetir sin depender de memoria.", options: ["No", "Algunos", "Casi todos", "Sí, se actualizan"] },
+        { id: "ops_3", label: "¿Entregás a tiempo?", helper: "Sin correr ni perder calidad.", options: ["Pocas veces", "A veces", "Casi siempre", "Sí, de forma estable"] },
+      ],
+      actions: isTeam
+        ? ["Definí responsable y resultado esperado para cada proceso clave.", "Documentá el proceso que más errores genera.", "Revisá capacidad y entregas pendientes una vez por semana."]
+        : ["Separá bloques semanales para vender, entregar y administrar.", "Documentá la tarea repetitiva que más tiempo te consume.", "Definí un límite de trabajos o pedidos por semana."],
+    },
+    {
+      id: "direction", number: "05", title: "Objetivo y control", shortTitle: "Dirección", description: `Enfocado en tu objetivo: ${goals.find((item) => item.id === context.goal)?.label.toLowerCase() ?? "mejorar"}.`,
+      questions: [
+        { id: "direction_1", label: "¿Tu objetivo tiene número y fecha?", helper: "Debe poder medirse.", options: ["No", "Solo una idea", "Tiene un número", "Sí, número y fecha"] },
+        { id: "direction_2", label: "¿Revisás resultados cada semana?", helper: "Ventas, caja y una métrica clave.", options: ["No", "A veces", "Casi siempre", "Sí, el mismo día"] },
+        { id: "direction_3", label: "¿Sabés qué vas a dejar de hacer?", helper: "El foco también necesita límites.", options: ["No", "Lo pienso", "Tengo una lista", "Sí, ya lo decidí"] },
+      ],
+      actions: [
+        `Convertí “${goals.find((item) => item.id === context.goal)?.label ?? "mejorar"}” en una meta con número y fecha.`,
+        "Revisá ventas, caja y una métrica clave el mismo día cada semana.",
+        "Pausá una tarea o proyecto que no acerque a la meta.",
+      ],
+    },
+  ];
+}
+
+const defaultContext: BusinessContext = { businessType: "", channel: "", customer: "", team: "", stage: "", goal: "", currency: "ARS", revenue: "", fixedCosts: "", variableCosts: "", targetRevenue: "" };
 
 function clampStep(value: unknown) {
   const parsed = Number(value);
@@ -129,9 +198,15 @@ function getMaturity(score: number) {
 }
 
 function parseAmount(value: string) {
-  const normalized = value.replace(/\s/g, "").replace(/\./g, "").replace(",", ".").replace(/[^0-9.-]/g, "");
+  const normalized = value.replace(/\D/g, "");
   const amount = Number(normalized);
   return Number.isFinite(amount) ? Math.max(0, amount) : 0;
+}
+
+function formatAmountInput(value: string) {
+  const digits = value.replace(/\D/g, "").replace(/^0+(?=\d)/, "").slice(0, 15);
+  if (!digits) return "";
+  return new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(Number(digits));
 }
 
 function formatMoney(value: number, currency: "ARS" | "USD") {
@@ -144,6 +219,7 @@ export function BusinessPulse() {
   const [context, setContext] = useState<BusinessContext>(defaultContext);
   const [hydrated, setHydrated] = useState(false);
   const [showResume, setShowResume] = useState(false);
+  const dimensions = buildDimensions(context);
 
   useEffect(() => {
     let savedStep = 0;
@@ -174,10 +250,10 @@ export function BusinessPulse() {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ step, answers, context }));
   }, [answers, context, hydrated, step]);
 
-  const dimensionScores = useMemo(() => Object.fromEntries(dimensions.map((dimension) => {
+  const dimensionScores = Object.fromEntries(dimensions.map((dimension) => {
     const total = dimension.questions.reduce((sum, question) => sum + (answers[question.id] ?? 0), 0);
     return [dimension.id, Math.round((total / (dimension.questions.length * 3)) * 100)];
-  })) as Record<DimensionId, number>, [answers]);
+  })) as Record<DimensionId, number>;
 
   const overallScore = Math.round(
     dimensionScores.finances * 0.25
@@ -192,15 +268,23 @@ export function BusinessPulse() {
   const revenue = parseAmount(context.revenue);
   const fixedCosts = parseAmount(context.fixedCosts);
   const variableCosts = parseAmount(context.variableCosts);
+  const targetRevenue = parseAmount(context.targetRevenue);
   const operatingResult = revenue - fixedCosts - variableCosts;
   const netMargin = revenue > 0 ? (operatingResult / revenue) * 100 : null;
   const contributionRate = revenue > 0 ? (revenue - variableCosts) / revenue : 0;
   const breakEven = contributionRate > 0 ? fixedCosts / contributionRate : null;
+  const revenueGap = targetRevenue > revenue ? targetRevenue - revenue : 0;
+  const growthNeeded = revenue > 0 && targetRevenue > revenue ? ((targetRevenue / revenue) - 1) * 100 : 0;
   const hasNumbers = revenue > 0 && (fixedCosts > 0 || variableCosts > 0);
 
   const currentDimension = step >= 1 && step <= 5 ? dimensions[step - 1] : null;
   const currentComplete = currentDimension ? currentDimension.questions.every((question) => answers[question.id] !== undefined) : true;
-  const contextComplete = Boolean(context.stage && context.goal);
+  const contextComplete = Boolean(context.businessType && context.channel && context.customer && context.team && context.stage && context.goal);
+
+  function updateProfile(field: keyof Pick<BusinessContext, "businessType" | "channel" | "customer" | "team" | "stage" | "goal">, value: string) {
+    setContext((current) => ({ ...current, [field]: value }));
+    if (Object.keys(answers).length) setAnswers({});
+  }
 
   function goTo(nextStep: number) {
     setStep(nextStep);
@@ -234,9 +318,10 @@ export function BusinessPulse() {
               <p className="mt-4 text-sm leading-7 text-white/65">{maturity.text}</p>
 
               <div className="mt-8 border-t border-white/10 pt-6">
-                <p className="text-[10px] font-black uppercase tracking-[.15em] text-white/40">Contexto evaluado</p>
-                <p className="mt-3 text-sm font-bold text-white/80">{stages.find((item) => item.id === context.stage)?.label}</p>
-                <p className="mt-1 text-xs text-white/45">Objetivo: {goals.find((item) => item.id === context.goal)?.label}</p>
+                <p className="text-[10px] font-black uppercase tracking-[.15em] text-white/40">Perfil evaluado</p>
+                <p className="mt-3 text-sm font-bold text-white/80">{businessTypes.find((item) => item.id === context.businessType)?.label} · {channels.find((item) => item.id === context.channel)?.label}</p>
+                <p className="mt-1 text-xs text-white/45">{customers.find((item) => item.id === context.customer)?.label} · {teams.find((item) => item.id === context.team)?.label}</p>
+                <p className="mt-3 text-xs font-bold text-[#aee5c2]">Objetivo: {goals.find((item) => item.id === context.goal)?.label}</p>
               </div>
             </div>
           </aside>
@@ -267,6 +352,16 @@ export function BusinessPulse() {
               <article className="rounded-2xl border border-[#dce8e0] bg-white p-5"><p className="text-[10px] font-black uppercase tracking-[.13em] text-[#71837b]">Margen neto</p><p className="mt-3 text-xl font-black text-[#153f2e]">{netMargin?.toFixed(1)}%</p></article>
               <article className="rounded-2xl border border-[#dce8e0] bg-white p-5"><p className="text-[10px] font-black uppercase tracking-[.13em] text-[#71837b]">Punto de equilibrio</p><p className="mt-3 text-xl font-black text-[#153f2e]">{breakEven ? formatMoney(breakEven, context.currency) : "Revisar costos"}</p></article>
             </div>
+            {targetRevenue > 0 && (
+              <div className={`mt-4 rounded-2xl border p-5 ${revenueGap > 0 ? "border-[#e3d3b5] bg-[#fffaf0]" : "border-[#bfdac9] bg-[#eff8f2]"}`}>
+                <p className="text-[10px] font-black uppercase tracking-[.13em] text-[#71837b]">Meta mensual</p>
+                <p className="mt-2 text-sm font-bold text-[#294739]">
+                  {revenueGap > 0
+                    ? `Para llegar a ${formatMoney(targetRevenue, context.currency)} faltan ${formatMoney(revenueGap, context.currency)} (${growthNeeded.toFixed(1)}% más ventas).`
+                    : `La venta actual ya alcanza la meta de ${formatMoney(targetRevenue, context.currency)}.`}
+                </p>
+              </div>
+            )}
           </div>
         )}
 
@@ -329,35 +424,69 @@ export function BusinessPulse() {
 
           {step === 0 && (
             <div>
-              <p className="eyebrow">Antes de medir</p>
-              <h3 className="mt-3 max-w-2xl text-3xl font-black tracking-[-.045em] text-[#153f2e] sm:text-4xl">Contanos en qué momento está tu negocio.</h3>
-              <p className="mt-4 max-w-2xl leading-7 text-[#60736a]">No pedimos nombre, email ni datos personales. Este contexto hace que el plan final sea más relevante.</p>
+              <p className="eyebrow">Primero entendemos tu negocio</p>
+              <h3 className="mt-3 max-w-3xl text-3xl font-black tracking-[-.045em] text-[#153f2e] sm:text-4xl">¿Qué vendés y cómo funciona?</h3>
+              <p className="mt-4 max-w-2xl leading-7 text-[#60736a]">Tus respuestas cambian las preguntas siguientes. Un negocio de servicios no se evalúa igual que un local gastronómico.</p>
 
               <fieldset className="mt-8">
-                <legend className="text-sm font-black text-[#294739]">Etapa actual</legend>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  {stages.map((stage) => (
-                    <label key={stage.id} className={`cursor-pointer rounded-2xl border p-4 transition ${context.stage === stage.id ? "border-[#2c8158] bg-[#eaf7ef] shadow-[inset_0_0_0_1px_#2c8158]" : "border-[#dce8e0] hover:border-[#a9c9b6] hover:bg-[#f8fbf9]"}`}>
-                      <input type="radio" name="stage" value={stage.id} checked={context.stage === stage.id} onChange={() => setContext((current) => ({ ...current, stage: stage.id }))} className="sr-only" />
-                      <span className="font-black text-[#244437]">{stage.label}</span><span className="mt-1 block text-xs text-[#71837b]">{stage.detail}</span>
+                <legend className="text-sm font-black text-[#294739]">1. ¿Qué vendés?</legend>
+                <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                  {businessTypes.map((item) => (
+                    <label key={item.id} className={`cursor-pointer rounded-2xl border p-4 transition ${context.businessType === item.id ? "border-[#2c8158] bg-[#eaf7ef] shadow-[inset_0_0_0_1px_#2c8158]" : "border-[#dce8e0] hover:border-[#a9c9b6] hover:bg-[#f8fbf9]"}`}>
+                      <input type="radio" name="businessType" value={item.id} checked={context.businessType === item.id} onChange={() => updateProfile("businessType", item.id)} className="sr-only" />
+                      <span className="grid size-9 place-items-center rounded-xl bg-white text-[#26734f] shadow-sm">{item.icon}</span><span className="mt-3 block text-sm font-black text-[#244437]">{item.label}</span><span className="mt-1 block text-[10px] leading-4 text-[#71837b]">{item.detail}</span>
                     </label>
                   ))}
                 </div>
               </fieldset>
+
+              <div className="mt-7 grid gap-7 sm:grid-cols-2">
+                <fieldset>
+                  <legend className="text-sm font-black text-[#294739]">2. ¿Cómo vendés?</legend>
+                  <div className="mt-3 grid gap-2">
+                    {channels.map((item) => <label key={item.id} className={`cursor-pointer rounded-xl border px-4 py-3 text-xs font-bold transition ${context.channel === item.id ? "border-[#2c8158] bg-[#eaf7ef] text-[#18583a]" : "border-[#dce8e0] text-[#5c7066] hover:bg-[#f8fbf9]"}`}><input type="radio" name="channel" value={item.id} checked={context.channel === item.id} onChange={() => updateProfile("channel", item.id)} className="sr-only" />{item.label}</label>)}
+                  </div>
+                </fieldset>
+                <fieldset>
+                  <legend className="text-sm font-black text-[#294739]">3. ¿A quién le vendés?</legend>
+                  <div className="mt-3 grid gap-2">
+                    {customers.map((item) => <label key={item.id} className={`cursor-pointer rounded-xl border px-4 py-3 text-xs font-bold transition ${context.customer === item.id ? "border-[#2c8158] bg-[#eaf7ef] text-[#18583a]" : "border-[#dce8e0] text-[#5c7066] hover:bg-[#f8fbf9]"}`}><input type="radio" name="customer" value={item.id} checked={context.customer === item.id} onChange={() => updateProfile("customer", item.id)} className="sr-only" />{item.label}</label>)}
+                  </div>
+                </fieldset>
+              </div>
+
+              <div className="mt-7 grid gap-7 sm:grid-cols-2">
+                <fieldset>
+                  <legend className="text-sm font-black text-[#294739]">4. ¿Quién trabaja?</legend>
+                  <div className="mt-3 grid gap-2">
+                    {teams.map((item) => <label key={item.id} className={`cursor-pointer rounded-xl border px-4 py-3 text-xs font-bold transition ${context.team === item.id ? "border-[#2c8158] bg-[#eaf7ef] text-[#18583a]" : "border-[#dce8e0] text-[#5c7066] hover:bg-[#f8fbf9]"}`}><input type="radio" name="team" value={item.id} checked={context.team === item.id} onChange={() => updateProfile("team", item.id)} className="sr-only" />{item.label}</label>)}
+                  </div>
+                </fieldset>
+                <fieldset>
+                  <legend className="text-sm font-black text-[#294739]">5. ¿En qué etapa estás?</legend>
+                  <div className="mt-3 grid gap-2">
+                    {stages.map((item) => <label key={item.id} className={`cursor-pointer rounded-xl border px-4 py-3 text-xs font-bold transition ${context.stage === item.id ? "border-[#2c8158] bg-[#eaf7ef] text-[#18583a]" : "border-[#dce8e0] text-[#5c7066] hover:bg-[#f8fbf9]"}`}><input type="radio" name="stage" value={item.id} checked={context.stage === item.id} onChange={() => updateProfile("stage", item.id)} className="sr-only" />{item.label}</label>)}
+                  </div>
+                </fieldset>
+              </div>
 
               <fieldset className="mt-7">
-                <legend className="text-sm font-black text-[#294739]">Objetivo principal de los próximos 90 días</legend>
+                <legend className="text-sm font-black text-[#294739]">6. ¿Qué querés mejorar primero?</legend>
                 <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
-                  {goals.map((goal) => (
-                    <label key={goal.id} className={`cursor-pointer rounded-2xl border p-4 text-center transition ${context.goal === goal.id ? "border-[#2c8158] bg-[#eaf7ef] shadow-[inset_0_0_0_1px_#2c8158]" : "border-[#dce8e0] hover:border-[#a9c9b6] hover:bg-[#f8fbf9]"}`}>
-                      <input type="radio" name="goal" value={goal.id} checked={context.goal === goal.id} onChange={() => setContext((current) => ({ ...current, goal: goal.id }))} className="sr-only" />
-                      <span className="mx-auto grid size-9 place-items-center rounded-xl bg-white text-[#26734f] shadow-sm">{goal.icon}</span><span className="mt-3 block text-xs font-black leading-5 text-[#294739]">{goal.label}</span>
+                  {goals.map((item) => (
+                    <label key={item.id} className={`cursor-pointer rounded-xl border p-4 text-center transition ${context.goal === item.id ? "border-[#2c8158] bg-[#eaf7ef] text-[#18583a]" : "border-[#dce8e0] text-[#5c7066] hover:bg-[#f8fbf9]"}`}>
+                      <input type="radio" name="goal" value={item.id} checked={context.goal === item.id} onChange={() => updateProfile("goal", item.id)} className="sr-only" />
+                      <span className="mx-auto grid size-8 place-items-center rounded-lg bg-white text-[#26734f] shadow-sm">{item.icon}</span><span className="mt-2 block text-xs font-black leading-5">{item.label}</span>
                     </label>
                   ))}
                 </div>
               </fieldset>
 
-              <div className="mt-9 flex justify-end"><button type="button" disabled={!contextComplete} onClick={() => goTo(1)} className="focus-ring rounded-full bg-[#153f2e] px-6 py-3.5 text-sm font-black text-white hover:bg-[#0d3223] disabled:cursor-not-allowed disabled:opacity-35">Comenzar evaluación →</button></div>
+              {context.businessType && context.channel && context.customer && context.team && (
+                <div className="mt-7 rounded-2xl border border-[#cde0d4] bg-[#f1f8f4] p-4 text-xs leading-5 text-[#456355]"><strong>Perfil:</strong> {businessTypes.find((item) => item.id === context.businessType)?.label} · {channels.find((item) => item.id === context.channel)?.label} · {customers.find((item) => item.id === context.customer)?.label} · {teams.find((item) => item.id === context.team)?.label}</div>
+              )}
+
+              <div className="mt-9 flex items-center justify-between gap-4"><p className="text-xs text-[#7b8b83]">Faltan {6 - [context.businessType, context.channel, context.customer, context.team, context.stage, context.goal].filter(Boolean).length} respuestas</p><button type="button" disabled={!contextComplete} onClick={() => goTo(1)} className="focus-ring rounded-full bg-[#153f2e] px-6 py-3.5 text-sm font-black text-white hover:bg-[#0d3223] disabled:cursor-not-allowed disabled:opacity-35">Crear preguntas para mi negocio →</button></div>
             </div>
           )}
 
@@ -386,22 +515,23 @@ export function BusinessPulse() {
           {step === 6 && (
             <div>
               <p className="eyebrow">Capa financiera opcional</p>
-              <h3 className="mt-3 max-w-2xl text-3xl font-black tracking-[-.045em] text-[#153f2e] sm:text-4xl">Sumá números para obtener una lectura más concreta.</h3>
-              <p className="mt-4 max-w-2xl leading-7 text-[#60736a]">Si los completás, calculamos resultado, margen y punto de equilibrio. Podés saltear esta parte sin perder el diagnóstico estratégico.</p>
+              <h3 className="mt-3 max-w-2xl text-3xl font-black tracking-[-.045em] text-[#153f2e] sm:text-4xl">Sumá los números de un mes normal.</h3>
+              <p className="mt-4 max-w-2xl leading-7 text-[#60736a]">Escribí solo números. Growtella agrega los puntos automáticamente: si ingresás <strong>4000000</strong>, vas a ver <strong>4.000.000</strong>.</p>
 
               <div className="mt-7 flex w-fit rounded-xl bg-[#eef5f0] p-1" role="group" aria-label="Moneda">
                 {(["ARS", "USD"] as const).map((currency) => <button key={currency} type="button" onClick={() => setContext((current) => ({ ...current, currency }))} className={`rounded-lg px-4 py-2 text-xs font-black ${context.currency === currency ? "bg-white text-[#153f2e] shadow-sm" : "text-[#71837b]"}`}>{currency}</button>)}
               </div>
 
-              <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                {[
-                  { key: "revenue", label: "Ventas mensuales", helper: "Total facturado en un mes normal" },
-                  { key: "fixedCosts", label: "Costos fijos", helper: "Alquiler, sueldos, servicios, sistemas" },
-                  { key: "variableCosts", label: "Costos variables", helper: "Insumos, comisiones y costos por venta" },
-                ].map((field) => (
+              <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {([
+                  { key: "revenue", label: "Ventas mensuales", helper: "Lo facturado en un mes normal" },
+                  { key: "fixedCosts", label: "Costos fijos", helper: "Alquiler, sueldos y servicios" },
+                  { key: "variableCosts", label: "Costos variables", helper: "Insumos y comisiones por venta" },
+                  { key: "targetRevenue", label: "Meta mensual", helper: "Cuánto querés vender por mes" },
+                ] as const).map((field) => (
                   <label key={field.key} className="rounded-2xl border border-[#dce8e0] bg-[#f9fbfa] p-4">
                     <span className="text-xs font-black text-[#294739]">{field.label}</span><span className="mt-1 block min-h-8 text-[10px] leading-4 text-[#7a8b83]">{field.helper}</span>
-                    <span className="mt-4 flex items-center gap-2 rounded-xl border border-[#d3e1d8] bg-white px-3"><span className="text-xs font-black text-[#4a8067]">{context.currency === "ARS" ? "$" : "US$"}</span><input inputMode="decimal" value={context[field.key as keyof Pick<BusinessContext, "revenue" | "fixedCosts" | "variableCosts">]} onChange={(event) => setContext((current) => ({ ...current, [field.key]: event.target.value }))} placeholder="0" className="min-w-0 flex-1 bg-transparent py-3 text-sm font-black text-[#153f2e] outline-none" /></span>
+                    <span className="mt-4 flex items-center gap-2 rounded-xl border border-[#d3e1d8] bg-white px-3 focus-within:border-[#75a98c] focus-within:ring-2 focus-within:ring-[#d9eee2]"><span className="text-xs font-black text-[#4a8067]">{context.currency === "ARS" ? "$" : "US$"}</span><input inputMode="numeric" value={context[field.key]} onChange={(event) => setContext((current) => ({ ...current, [field.key]: formatAmountInput(event.target.value) }))} placeholder="Ej: 4.000.000" aria-label={field.label} className="min-w-0 flex-1 bg-transparent py-3 text-sm font-black tabular-nums text-[#153f2e] outline-none placeholder:font-medium placeholder:text-[#a1afa8]" /></span>
                   </label>
                 ))}
               </div>

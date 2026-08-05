@@ -157,10 +157,10 @@ export default function Home() {
             <div>
               <p className="eyebrow">Growtella también analiza</p>
               <h2 className="mt-4 text-4xl font-black tracking-[-.05em] text-[#10291f] sm:text-5xl">Una radiografía real de tu negocio.</h2>
-              <p className="mt-5 text-lg leading-8 text-[#5b6f66]">El Diagnóstico 360° evalúa 15 indicadores, calcula tu salud financiera y construye un plan de 30 días según tus prioridades.</p>
+              <p className="mt-5 text-lg leading-8 text-[#5b6f66]">El Diagnóstico 360° primero entiende qué vendés, cómo vendés y a quién. Después adapta 15 indicadores, calcula tu salud financiera y crea un plan de 30 días.</p>
               <ul className="mt-7 grid gap-3">
                 {[
-                  "Cinco áreas: finanzas, ventas, oferta, operaciones y dirección",
+                  "Preguntas distintas para servicios, productos, gastronomía o digital",
                   "Margen, resultado y punto de equilibrio con tus números",
                   "Informe privado y plan priorizado de cuatro semanas",
                 ].map((item) => <Check key={item}>{item}</Check>)}

@@ -22,9 +22,9 @@ export const metadata: Metadata = {
     type: "website",
     locale: "es_AR",
     siteName: "Growtella",
-    images: [{ url: "/og-v2.png", width: 1731, height: 909, alt: "Growtella — Diagnóstico 360° para tu negocio" }],
+    images: [{ url: "/og-v3.png", width: 1731, height: 908, alt: "Growtella — Primero entendemos tu negocio" }],
   },
-  twitter: { card: "summary_large_image", title: "Growtella", description: siteConfig.description, images: ["/og-v2.png"] },
+  twitter: { card: "summary_large_image", title: "Growtella", description: siteConfig.description, images: ["/og-v3.png"] },
   robots: { index: true, follow: true },
   verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
     ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
