@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 import { getSupabaseClient, hasSupabaseConfig } from "@/lib/supabase/client";
 
 type AnswerMap = Record<string, number>;
@@ -199,6 +200,13 @@ function getMaturity(score: number) {
   return { title: "Etapa de orden y validación", text: "No necesitás resolver todo junto. Una secuencia inteligente puede darte estabilidad rápidamente.", tone: "Empezá simple" };
 }
 
+function getPriorityTag(score: number, index: number) {
+  if (score >= 82) return index === 0 ? "Fortaleza a sostener" : "Siguiente nivel";
+  if (score >= 64) return index === 0 ? "Oportunidad principal" : "Oportunidad de mejora";
+  if (score >= 43) return index === 0 ? "Prioridad de mejora" : "Fortalecer base";
+  return index === 0 ? "Prioridad crítica" : "Atención necesaria";
+}
+
 function parseAmount(value: string) {
   const normalized = value.replace(/\D/g, "");
   const amount = Number(normalized);
@@ -295,11 +303,12 @@ export function BusinessPulse() {
   const priorities = [...dimensions].sort((a, b) => dimensionScores[a.id] - dimensionScores[b.id]).slice(0, 3);
   const maturity = getMaturity(overallScore);
   const actionPlan = [
-    { week: "Semana 1", dimension: priorities[0], action: priorities[0].actions[0], tag: "Prioridad crítica" },
-    { week: "Semana 2", dimension: priorities[1], action: priorities[1].actions[0], tag: "Segundo frente" },
-    { week: "Semana 3", dimension: priorities[2], action: priorities[2].actions[0], tag: "Fortalecer base" },
-    { week: "Semana 4", dimension: priorities[0], action: priorities[0].actions[1], tag: "Medir y ajustar" },
+    { week: "Semana 1", dimension: priorities[0], action: priorities[0].actions[0], tag: getPriorityTag(dimensionScores[priorities[0].id], 0) },
+    { week: "Semana 2", dimension: priorities[1], action: priorities[1].actions[0], tag: getPriorityTag(dimensionScores[priorities[1].id], 1) },
+    { week: "Semana 3", dimension: priorities[2], action: priorities[2].actions[0], tag: getPriorityTag(dimensionScores[priorities[2].id], 2) },
+    { week: "Semana 4", dimension: priorities[0], action: priorities[0].actions[1], tag: dimensionScores[priorities[0].id] >= 82 ? "Escalar con control" : "Medir y ajustar" },
   ];
+  const strongAcrossTheBoard = priorities.every((item) => dimensionScores[item.id] >= 82);
 
   const revenue = parseAmount(context.revenue);
   const fixedCosts = parseAmount(context.fixedCosts);
@@ -363,9 +372,27 @@ export function BusinessPulse() {
   }
 
   function goTo(nextStep: number) {
+    if (step === 0 && nextStep === 1) {
+      trackAnalyticsEvent("diagnostic_start", {
+        business_type: context.businessType,
+        channel: context.channel,
+        stage: context.stage,
+        goal: context.goal,
+      });
+    }
     setStep(nextStep);
     setShowResume(false);
     requestAnimationFrame(() => document.getElementById("diagnostic-top")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
+
+  function completeDiagnostic(includedNumbers: boolean) {
+    trackAnalyticsEvent("diagnostic_complete", {
+      score: overallScore,
+      business_type: context.businessType,
+      goal: context.goal,
+      included_numbers: includedNumbers,
+    });
+    goTo(7);
   }
 
   async function saveDiagnostic() {
@@ -425,6 +452,11 @@ export function BusinessPulse() {
     setSavedDiagnosticId(result.data.id);
     window.history.replaceState({}, "", `/diagnostico?report=${result.data.id}`);
     setDiagnosticMessage(savedDiagnosticId ? "Diagnóstico actualizado en tu cuenta." : "Diagnóstico guardado en tu cuenta.");
+    trackAnalyticsEvent("diagnostic_saved", {
+      score: overallScore,
+      updated: Boolean(savedDiagnosticId),
+      business_type: context.businessType,
+    });
   }
 
   function reset() {
@@ -504,7 +536,7 @@ export function BusinessPulse() {
         )}
 
         <div className="border-t border-[#e1ebe5] p-6 sm:p-10">
-          <div className="max-w-3xl"><p className="eyebrow">Plan personalizado de 30 días</p><h3 className="mt-2 text-3xl font-black tracking-[-.04em] text-[#153f2e]">Tres prioridades, cuatro semanas, cero ruido.</h3><p className="mt-3 leading-7 text-[#5f7369]">El orden se define por tus áreas con menor puntaje. Completá una acción antes de agregar otra.</p></div>
+          <div className="max-w-3xl"><p className="eyebrow">Plan personalizado de 30 días</p><h3 className="mt-2 text-3xl font-black tracking-[-.04em] text-[#153f2e]">{strongAcrossTheBoard ? "Cuatro semanas para sostener y escalar." : "Tres prioridades, cuatro semanas, cero ruido."}</h3><p className="mt-3 leading-7 text-[#5f7369]">{strongAcrossTheBoard ? "No detectamos una urgencia crítica. El plan se enfoca en mantener la calidad y preparar el próximo nivel." : "El orden se define por tus áreas con menor puntaje. Completá una acción antes de agregar otra."}</p></div>
           <div className="mt-8 grid gap-4 lg:grid-cols-4">
             {actionPlan.map((item, index) => (
               <article key={item.week} className={`rounded-2xl border p-5 ${index === 0 ? "border-[#a8cdb7] bg-[#edf8f1]" : "border-[#dce8e0] bg-white"}`}>
@@ -523,7 +555,7 @@ export function BusinessPulse() {
             {diagnosticMessage && <p role="status" className="mt-2 text-xs font-bold text-[#2b7651]">{diagnosticMessage}</p>}
           </div>
           <div className="flex flex-wrap gap-2 print:hidden">
-            <button type="button" onClick={() => window.print()} className="focus-ring rounded-full border border-[#c9dcd1] bg-white px-4 py-2.5 text-xs font-black text-[#234638] hover:bg-[#f3f8f5]">Guardar informe en PDF</button>
+            <button type="button" onClick={() => { trackAnalyticsEvent("diagnostic_pdf", { score: overallScore }); window.print(); }} className="focus-ring rounded-full border border-[#c9dcd1] bg-white px-4 py-2.5 text-xs font-black text-[#234638] hover:bg-[#f3f8f5]">Guardar informe en PDF</button>
             {userId ? (
               <button type="button" disabled={savingDiagnostic} onClick={() => void saveDiagnostic()} className="focus-ring rounded-full border border-[#9fc8af] bg-[#eaf7ef] px-4 py-2.5 text-xs font-black text-[#226b48] hover:bg-[#dff2e6] disabled:cursor-wait disabled:opacity-60">
                 {savingDiagnostic ? "Guardando..." : savedDiagnosticId ? "Actualizar en mi cuenta" : "Guardar en mi cuenta"}
@@ -682,7 +714,7 @@ export function BusinessPulse() {
 
               {hasNumbers && <div className={`mt-5 rounded-2xl border p-4 text-sm ${operatingResult >= 0 ? "border-[#bcdac8] bg-[#eef8f2] text-[#285c43]" : "border-[#efd2c3] bg-[#fff5ef] text-[#8d482a]"}`}><strong>Lectura rápida:</strong> con estos datos, el resultado mensual estimado es {formatMoney(operatingResult, context.currency)} y el margen es {netMargin?.toFixed(1)}%.</div>}
 
-              <div className="mt-9 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between"><button type="button" onClick={() => goTo(5)} className="focus-ring rounded-full border border-[#ccdcd3] px-5 py-3 text-sm font-black text-[#365548] hover:bg-[#f5f9f7]">← Volver</button><div className="flex flex-col gap-2 sm:flex-row"><button type="button" onClick={() => goTo(7)} className="focus-ring rounded-full border border-[#bdd4c6] px-5 py-3 text-sm font-black text-[#2b6448] hover:bg-[#f1f8f4]">Omitir números</button><button type="button" onClick={() => goTo(7)} className="focus-ring rounded-full bg-[#153f2e] px-6 py-3 text-sm font-black text-white hover:bg-[#0d3223]">Generar mi informe →</button></div></div>
+              <div className="mt-9 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between"><button type="button" onClick={() => goTo(5)} className="focus-ring rounded-full border border-[#ccdcd3] px-5 py-3 text-sm font-black text-[#365548] hover:bg-[#f5f9f7]">← Volver</button><div className="flex flex-col gap-2 sm:flex-row"><button type="button" onClick={() => completeDiagnostic(false)} className="focus-ring rounded-full border border-[#bdd4c6] px-5 py-3 text-sm font-black text-[#2b6448] hover:bg-[#f1f8f4]">Omitir números</button><button type="button" onClick={() => completeDiagnostic(hasNumbers)} className="focus-ring rounded-full bg-[#153f2e] px-6 py-3 text-sm font-black text-white hover:bg-[#0d3223]">Generar mi informe →</button></div></div>
             </div>
           )}
         </div>

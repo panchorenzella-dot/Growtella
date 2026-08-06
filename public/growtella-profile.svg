@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" role="img" aria-labelledby="title description">
+  <title id="title">Growtella</title>
+  <desc id="description">Isotipo oficial de Growtella preparado para perfiles sociales</desc>
+  <defs>
+    <radialGradient id="background" cx="28%" cy="18%" r="95%">
+      <stop offset="0" stop-color="#216144"/>
+      <stop offset="0.52" stop-color="#153f2e"/>
+      <stop offset="1" stop-color="#0d2e21"/>
+    </radialGradient>
+    <linearGradient id="orb" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b8f2cb"/>
+      <stop offset="1" stop-color="#75d89c"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="28" stdDeviation="32" flood-color="#071c14" flood-opacity=".3"/>
+    </filter>
+  </defs>
+
+  <rect width="1080" height="1080" fill="url(#background)"/>
+  <circle cx="142" cy="948" r="310" fill="none" stroke="#8be3ad" stroke-width="2" opacity=".14"/>
+  <circle cx="930" cy="152" r="246" fill="none" stroke="#ffffff" stroke-width="2" opacity=".09"/>
+  <path d="M-10 858C205 722 334 720 514 772c193 56 317 46 576-100v418H-10z" fill="#8be3ad" opacity=".035"/>
+
+  <g filter="url(#shadow)" transform="translate(140 140) scale(12.5)">
+    <path d="M46 30v17c-4 3-9 5-15 5C18 52 10 44 10 32S19 12 32 12c7 0 12 2 16 6l-7 8c-2-2-5-3-9-3-6 0-10 4-10 10 0 5 4 9 10 9 2 0 4 0 5-1v-5h-8v-9h17v3z" fill="#fff"/>
+    <circle cx="49" cy="14" r="5" fill="url(#orb)"/>
+  </g>
+</svg>
