@@ -3,7 +3,7 @@
 ## Antes de publicar
 
 - Comprar el dominio definitivo.
-- Crear un correo del dominio, por ejemplo `hola@tudominio.com`.
+- Correo profesional configurado: `contacto@growtella.com`.
 - Confirmar que el repositorio independiente de Growtella esté actualizado en GitHub.
 - Importar ese repositorio como un proyecto nuevo de Vercel.
 - Agregar en Vercel las variables públicas de `.env.example` con los valores reales.

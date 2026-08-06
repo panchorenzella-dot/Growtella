@@ -5,7 +5,7 @@ export const siteConfig = {
   url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
   email:
     process.env.NEXT_PUBLIC_CONTACT_EMAIL ||
-    "calculadoraemprendedora@gmail.com",
+    "contacto@growtella.com",
   calculatorUrl:
     process.env.NEXT_PUBLIC_CALCULATOR_URL ||
     "https://www.calculadoraemprendedora.com",
