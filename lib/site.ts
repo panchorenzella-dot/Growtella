@@ -9,6 +9,9 @@ export const siteConfig = {
   calculatorUrl:
     process.env.NEXT_PUBLIC_CALCULATOR_URL ||
     "https://www.calculadoraemprendedora.com",
+  marketplaceUrl:
+    process.env.NEXT_PUBLIC_COMPRA_NEGOCIO_URL ||
+    "https://compra-negocio.vercel.app",
 };
 
 type ProductBase = {
@@ -28,35 +31,49 @@ export const products: Product[] = [
   {
     name: "Calculadora Emprendedora",
     description:
-      "Calculá precios, costos, márgenes, punto de equilibrio e inversiones con resultados claros.",
+      "CalculÃ¡ precios, costos, mÃ¡rgenes, punto de equilibrio e inversiones con resultados claros.",
     eyebrow: "16 calculadoras",
     href: siteConfig.calculatorUrl,
     status: "available",
     accent: "emerald",
     price: "Gratis",
     priceDetail: "funciones esenciales",
-    features: ["16 calculadoras", "Costos y márgenes", "Punto de equilibrio"],
+    features: ["16 calculadoras", "Costos y mÃ¡rgenes", "Punto de equilibrio"],
     external: true,
   },
   {
-    name: "Diagnóstico 360°",
+    name: "DiagnÃ³stico 360Â°",
     description:
-      "Recibí preguntas según tu tipo de negocio, sumá tus números y obtené un plan de 30 días.",
-    eyebrow: "Nuevo · Informe completo",
+      "RecibÃ­ preguntas segÃºn tu tipo de negocio, sumÃ¡ tus nÃºmeros y obtenÃ© un plan de 30 dÃ­as.",
+    eyebrow: "Nuevo Â· Informe completo",
     href: "/diagnostico",
     status: "available",
     accent: "mint",
     price: "Gratis",
     priceDetail: "sin registro",
-    features: ["Preguntas adaptadas a tu negocio", "Margen y punto de equilibrio", "Plan personalizado de 30 días"],
+    features: ["Preguntas adaptadas a tu negocio", "Margen y punto de equilibrio", "Plan personalizado de 30 dÃ­as"],
+  },
+  {
+    name: "Compra Negocio",
+    description:
+      "ExplorÃ¡ negocios digitales en funcionamiento, comprÃ¡ una participaciÃ³n o publicÃ¡ tu proyecto para recibir ofertas.",
+    eyebrow: "Marketplace digital",
+    href: siteConfig.marketplaceUrl,
+    status: "available",
+    accent: "mint",
+    price: "Gratis",
+    priceDetail: "para explorar y publicar",
+    features: ["Negocios digitales disponibles", "Participaciones o venta completa", "Consultas y ofertas privadas"],
+    external: true,
   },
   {
     name: "Presupuestos Inteligentes",
     description:
-      "Creá presupuestos profesionales, editables y listos para enviar a tus clientes.",
-    eyebrow: "Próximamente",
+      "CreÃ¡ presupuestos profesionales, editables y listos para enviar a tus clientes.",
+    eyebrow: "PrÃ³ximamente",
     status: "coming",
     accent: "lime",
-    features: ["Edición asistida", "Diseños profesionales", "Exportación lista para enviar"],
+    features: ["EdiciÃ³n asistida", "DiseÃ±os profesionales", "ExportaciÃ³n lista para enviar"],
   },
 ];
+
