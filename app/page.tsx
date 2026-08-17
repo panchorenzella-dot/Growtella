@@ -20,7 +20,7 @@ function formatUsd(value: number) {
   return `US$ ${value.toLocaleString("es-AR", { minimumFractionDigits: value % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
 }
 
-const productIcons = ["⌁", "◎", "CN", "✦"];
+const productIcons = ["⌁", "◎", "CN"];
 
 export default function Home() {
   return (
@@ -45,7 +45,7 @@ export default function Home() {
                 Diagnosticar mi negocio <Arrow />
               </Link>
               <Link href="/herramientas" className="focus-ring inline-flex min-h-13 items-center justify-center rounded-full border border-[#c7dacf] bg-white px-7 py-3.5 text-sm font-extrabold text-[#153f2e] transition hover:border-[#95b9a4] hover:bg-[#f8fbf9]">
-                Ver las 4 herramientas
+                Ver las 3 herramientas
               </Link>
             </div>
             <div className="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-xs font-bold text-[#6e8178]">
@@ -79,8 +79,8 @@ export default function Home() {
               </div>
 
               <div className="mt-3 rounded-2xl border border-[#dce8e0] p-4">
-                <div className="mb-3 flex items-center justify-between"><p className="text-xs font-black text-[#294739]">Tus herramientas</p><span className="text-[10px] font-bold text-[#71837b]">3 activas · 1 próxima</span></div>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div className="mb-3 flex items-center justify-between"><p className="text-xs font-black text-[#294739]">Tus herramientas</p><span className="text-[10px] font-bold text-[#71837b]">3 activas</span></div>
+                <div className="grid grid-cols-3 gap-2">
                   {products.map((product, index) => (
                     <div key={product.name} className="rounded-xl bg-[#f3f8f5] p-3">
                       <span className="text-base text-[#26734f]">{productIcons[index]}</span>
@@ -113,12 +113,12 @@ export default function Home() {
           <div className="grid gap-8 lg:grid-cols-[.8fr_1.2fr] lg:items-end">
             <div>
               <p className="eyebrow">Ecosistema de herramientas</p>
-              <h2 className="mt-4 text-4xl font-black tracking-[-.05em] text-[#10291f] sm:text-5xl">Cuatro soluciones. Una misma lógica.</h2>
+              <h2 className="mt-4 text-4xl font-black tracking-[-.05em] text-[#10291f] sm:text-5xl">Tres soluciones. Una misma lógica.</h2>
             </div>
             <p className="max-w-2xl text-lg leading-8 text-[#5b6f66] lg:justify-self-end">Cada producto resuelve un problema concreto y muestra desde el inicio cuánto cuesta y qué incluye.</p>
           </div>
 
-          <div className="mt-12 grid gap-5 lg:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-12 grid gap-5 lg:grid-cols-3">
             {products.map((product, index) => (
               <article id={product.status === "coming" ? "proximamente" : undefined} key={product.name} className={`card-hover flex min-h-[440px] flex-col rounded-[1.75rem] border p-7 ${index === 0 ? "border-[#bcd7c6] bg-[#f5faf7]" : "border-[#dce8e0] bg-white"}`}>
                 <div className="flex items-start justify-between gap-4">

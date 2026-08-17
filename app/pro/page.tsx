@@ -26,7 +26,7 @@ const comparisons = [
   ["Cuenta central", "Incluida", "Incluida"],
   ["Calculadora Emprendedora", "Funciones esenciales", "Funciones y exportaciones Pro"],
   ["Diagnóstico 360°", "Completo y sin registro", "Completo y sin registro"],
-  ["Presupuestos Inteligentes", "Próximamente", "Próximamente"],
+  ["Compra Negocio", "Explorar y publicar", "Explorar y publicar"],
   ["Análisis con IA", "1 por semana", "30 por mes"],
   ["Mensajes con IA", "5 por día", "300 por mes"],
   ["Escenarios", "3 por día", "Ilimitados"],

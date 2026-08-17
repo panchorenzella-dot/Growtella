@@ -66,13 +66,4 @@ export const products: Product[] = [
     features: ["Negocios digitales disponibles", "Participaciones o venta completa", "Consultas y ofertas privadas"],
     external: true,
   },
-  {
-    name: "Presupuestos Inteligentes",
-    description:
-      "Creá presupuestos profesionales, editables y listos para enviar a tus clientes.",
-    eyebrow: "Próximamente",
-    status: "coming",
-    accent: "lime",
-    features: ["Edición asistida", "Diseños profesionales", "Exportación lista para enviar"],
-  },
 ];
