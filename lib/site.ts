@@ -31,32 +31,32 @@ export const products: Product[] = [
   {
     name: "Calculadora Emprendedora",
     description:
-      "CalculÃ¡ precios, costos, mÃ¡rgenes, punto de equilibrio e inversiones con resultados claros.",
+      "Calculá precios, costos, márgenes, punto de equilibrio e inversiones con resultados claros.",
     eyebrow: "16 calculadoras",
     href: siteConfig.calculatorUrl,
     status: "available",
     accent: "emerald",
     price: "Gratis",
     priceDetail: "funciones esenciales",
-    features: ["16 calculadoras", "Costos y mÃ¡rgenes", "Punto de equilibrio"],
+    features: ["16 calculadoras", "Costos y márgenes", "Punto de equilibrio"],
     external: true,
   },
   {
-    name: "DiagnÃ³stico 360Â°",
+    name: "Diagnóstico 360°",
     description:
-      "RecibÃ­ preguntas segÃºn tu tipo de negocio, sumÃ¡ tus nÃºmeros y obtenÃ© un plan de 30 dÃ­as.",
-    eyebrow: "Nuevo Â· Informe completo",
+      "Recibí preguntas según tu tipo de negocio, sumá tus números y obtené un plan de 30 días.",
+    eyebrow: "Nuevo · Informe completo",
     href: "/diagnostico",
     status: "available",
     accent: "mint",
     price: "Gratis",
     priceDetail: "sin registro",
-    features: ["Preguntas adaptadas a tu negocio", "Margen y punto de equilibrio", "Plan personalizado de 30 dÃ­as"],
+    features: ["Preguntas adaptadas a tu negocio", "Margen y punto de equilibrio", "Plan personalizado de 30 días"],
   },
   {
     name: "Compra Negocio",
     description:
-      "ExplorÃ¡ negocios digitales en funcionamiento, comprÃ¡ una participaciÃ³n o publicÃ¡ tu proyecto para recibir ofertas.",
+      "Explorá negocios digitales en funcionamiento, comprá una participación o publicá tu proyecto para recibir ofertas.",
     eyebrow: "Marketplace digital",
     href: siteConfig.marketplaceUrl,
     status: "available",
@@ -69,11 +69,10 @@ export const products: Product[] = [
   {
     name: "Presupuestos Inteligentes",
     description:
-      "CreÃ¡ presupuestos profesionales, editables y listos para enviar a tus clientes.",
-    eyebrow: "PrÃ³ximamente",
+      "Creá presupuestos profesionales, editables y listos para enviar a tus clientes.",
+    eyebrow: "Próximamente",
     status: "coming",
     accent: "lime",
-    features: ["EdiciÃ³n asistida", "DiseÃ±os profesionales", "ExportaciÃ³n lista para enviar"],
+    features: ["Edición asistida", "Diseños profesionales", "Exportación lista para enviar"],
   },
 ];
-
