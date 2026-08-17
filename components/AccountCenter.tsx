@@ -6,8 +6,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { products, siteConfig } from "@/lib/site";
 import { getSupabaseClient, hasSupabaseConfig } from "@/lib/supabase/client";
 
-const productIcons = ["âŒ", "â—Ž", "CN", "âœ¦"];
-
 type AuthMode = "login" | "signup" | "reset" | "update";
 type PlanInfo = {
   plan: "free" | "pro";
@@ -68,11 +66,11 @@ function profileFromSession(session: Session | null) {
 
 function friendlyAuthError(message: string) {
   const normalized = message.toLowerCase();
-  if (normalized.includes("invalid login credentials")) return "El email o la contraseÃ±a no son correctos.";
-  if (normalized.includes("email not confirmed")) return "Primero confirmÃ¡ tu email desde el mensaje que te enviamos.";
-  if (normalized.includes("user already registered")) return "Ya existe una cuenta con ese email. ProbÃ¡ ingresar.";
-  if (normalized.includes("password should be")) return "La contraseÃ±a debe tener al menos 8 caracteres.";
-  if (normalized.includes("rate limit")) return "Hiciste varios intentos. EsperÃ¡ un momento y volvÃ© a probar.";
+  if (normalized.includes("invalid login credentials")) return "El email o la contraseña no son correctos.";
+  if (normalized.includes("email not confirmed")) return "Primero confirmá tu email desde el mensaje que te enviamos.";
+  if (normalized.includes("user already registered")) return "Ya existe una cuenta con ese email. Probá ingresar.";
+  if (normalized.includes("password should be")) return "La contraseña debe tener al menos 8 caracteres.";
+  if (normalized.includes("rate limit")) return "Hiciste varios intentos. Esperá un momento y volvé a probar.";
   return message;
 }
 
@@ -91,7 +89,7 @@ function effectivePlan(plan: PlanInfo | null): PlanInfo {
 
 function UsageCard({ item }: { item: UsageItem }) {
   const labels = {
-    analysis: ["AnÃ¡lisis con IA", "informes"],
+    analysis: ["Análisis con IA", "informes"],
     chat: ["Mensajes con IA", "mensajes"],
     scenario: ["Escenarios guardados", "escenarios"],
   } as const;
@@ -105,11 +103,11 @@ function UsageCard({ item }: { item: UsageItem }) {
         <div>
           <p className="text-xs font-extrabold uppercase tracking-[.12em] text-[#6c8177]">{label}</p>
           <p className="mt-3 text-3xl font-black tracking-tight text-[#153f2e]">
-            {item.used}<span className="text-base font-bold text-[#75877f]"> / {limit ?? "âˆž"}</span>
+            {item.used}<span className="text-base font-bold text-[#75877f]"> / {limit ?? "∞"}</span>
           </p>
         </div>
         <span className="grid size-10 place-items-center rounded-xl bg-[#e9f6ee] text-[#2a7651]">
-          {item.resource === "analysis" ? "âœ¦" : item.resource === "chat" ? "â†—" : "âŒ"}
+          {item.resource === "analysis" ? "✦" : item.resource === "chat" ? "↗" : "⌁"}
         </span>
       </div>
       {limit ? (
@@ -120,12 +118,14 @@ function UsageCard({ item }: { item: UsageItem }) {
         <p className="mt-5 text-sm font-bold text-[#2e7a55]">Uso ilimitado incluido</p>
       )}
       <p className="mt-3 text-xs text-[#75877f]">
-        {limit ? `${Math.max(0, limit - item.used)} ${unit} disponibles` : "Sin lÃ­mite mientras tu plan estÃ© activo"}
-        {item.resets_at ? ` Â· Se renueva ${formatDate(item.resets_at)}` : ""}
+        {limit ? `${Math.max(0, limit - item.used)} ${unit} disponibles` : "Sin límite mientras tu plan esté activo"}
+        {item.resets_at ? ` · Se renueva ${formatDate(item.resets_at)}` : ""}
       </p>
     </article>
   );
 }
+
+const productIcons = ["⌁", "◎", "CN", "✦"];
 
 export function AccountCenter() {
   const router = useRouter();
@@ -180,7 +180,7 @@ export function AccountCenter() {
     }));
     const analysisActivities: ActivityItem[] = (analysesResult.data ?? []).map((item) => ({
       id: item.id,
-      title: item.title || "AnÃ¡lisis con IA",
+      title: item.title || "Análisis con IA",
       detail: item.calculator_name,
       date: item.updated_at,
       href: `${siteConfig.calculatorUrl}/perfil/analisis/${item.id}`,
@@ -188,8 +188,8 @@ export function AccountCenter() {
     }));
     const diagnosticActivities: ActivityItem[] = (diagnosticsResult.data ?? []).map((item) => ({
       id: item.id,
-      title: item.title || "DiagnÃ³stico de negocio",
-      detail: `Ãndice Growtella ${item.overall_score}/100`,
+      title: item.title || "Diagnóstico de negocio",
+      detail: `Índice Growtella ${item.overall_score}/100`,
       date: item.created_at,
       href: `/diagnostico?report=${item.id}`,
       kind: "diagnostic",
@@ -198,7 +198,7 @@ export function AccountCenter() {
 
     const errors = [planResult.error, usageResult.error, scenariosResult.error, analysesResult.error, diagnosticsResult.error].filter(Boolean);
     if (errors.length) {
-      setMessage("La cuenta estÃ¡ conectada, pero falta aplicar alguna migraciÃ³n de Supabase para mostrar todos los datos.");
+      setMessage("La cuenta está conectada, pero falta aplicar alguna migración de Supabase para mostrar todos los datos.");
     }
     setDataLoading(false);
   }, []);
@@ -245,14 +245,14 @@ export function AccountCenter() {
 
     paypalReturnHandled.current = true;
     if (!subscriptionId) {
-      queueMicrotask(() => setMessage("PayPal confirmÃ³ el regreso, pero todavÃ­a no informÃ³ la suscripciÃ³n. RevisÃ¡ tu plan en unos instantes."));
+      queueMicrotask(() => setMessage("PayPal confirmó el regreso, pero todavía no informó la suscripción. Revisá tu plan en unos instantes."));
       window.history.replaceState({}, "", "/cuenta");
       return;
     }
 
     void (async () => {
       setDataLoading(true);
-      setMessage("Estamos confirmando tu suscripciÃ³n con PayPal...");
+      setMessage("Estamos confirmando tu suscripción con PayPal...");
       try {
         const response = await fetch("/api/paypal/subscriptions/sync", {
           method: "POST",
@@ -263,7 +263,7 @@ export function AccountCenter() {
           body: JSON.stringify({ subscriptionId }),
         });
         const result = await response.json() as { message?: string; error?: string };
-        setMessage(result.message || result.error || "Tu plan se estÃ¡ actualizando.");
+        setMessage(result.message || result.error || "Tu plan se está actualizando.");
         if (response.ok) {
           const analyticsWindow = window as Window & {
             gtag?: (command: "event", eventName: string, parameters: Record<string, unknown>) => void;
@@ -275,7 +275,7 @@ export function AccountCenter() {
           await loadAccountData();
         }
       } catch {
-        setMessage("El pago regresÃ³ correctamente, pero no pudimos actualizar el plan todavÃ­a. VolvÃ© a cargar esta pÃ¡gina en unos minutos.");
+        setMessage("El pago regresó correctamente, pero no pudimos actualizar el plan todavía. Volvé a cargar esta página en unos minutos.");
       } finally {
         setDataLoading(false);
         window.history.replaceState({}, "", "/cuenta");
@@ -299,11 +299,11 @@ export function AccountCenter() {
       if (mode === "reset") {
         const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/cuenta` });
         if (error) throw error;
-        setMessage("Te enviamos un enlace para crear una contraseÃ±a nueva.");
+        setMessage("Te enviamos un enlace para crear una contraseña nueva.");
       } else if (mode === "update") {
         const { error } = await supabase.auth.updateUser({ password });
         if (error) throw error;
-        setMessage("Tu contraseÃ±a se actualizÃ³ correctamente.");
+        setMessage("Tu contraseña se actualizó correctamente.");
         setMode("login");
       } else if (mode === "signup") {
         const nextPath = currentNextPath();
@@ -317,7 +317,7 @@ export function AccountCenter() {
           },
         });
         if (error) throw error;
-        setMessage(data.session ? "Tu cuenta Growtella ya estÃ¡ lista." : "RevisÃ¡ tu email para confirmar la cuenta.");
+        setMessage(data.session ? "Tu cuenta Growtella ya está lista." : "Revisá tu email para confirmar la cuenta.");
         if (data.session && nextPath) router.push(nextPath);
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -364,7 +364,7 @@ export function AccountCenter() {
     else {
       if (data.user) setSession((current) => current ? { ...current, user: data.user } : current);
       setEditing(false);
-      setMessage("Tu perfil se guardÃ³ para todas las herramientas de Growtella.");
+      setMessage("Tu perfil se guardó para todas las herramientas de Growtella.");
     }
   }
 
@@ -372,9 +372,9 @@ export function AccountCenter() {
     return (
       <section className="mx-auto max-w-4xl px-5 py-16 sm:px-8 sm:py-24">
         <div className="rounded-[2rem] border border-[#cfe2d6] bg-[#f4faf6] p-8 text-center sm:p-12">
-          <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-[#153f2e] text-xl text-white">âŒ</span>
-          <h2 className="mt-6 text-3xl font-black tracking-tight text-[#153f2e]">La cuenta central estÃ¡ construida.</h2>
-          <p className="mx-auto mt-4 max-w-xl leading-7 text-[#5b6f66]">Para activarla en esta instalaciÃ³n hay que agregar el mismo proyecto de Supabase que utiliza Calculadora Emprendedora.</p>
+          <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-[#153f2e] text-xl text-white">⌁</span>
+          <h2 className="mt-6 text-3xl font-black tracking-tight text-[#153f2e]">La cuenta central está construida.</h2>
+          <p className="mx-auto mt-4 max-w-xl leading-7 text-[#5b6f66]">Para activarla en esta instalación hay que agregar el mismo proyecto de Supabase que utiliza Calculadora Emprendedora.</p>
         </div>
       </section>
     );
@@ -391,9 +391,9 @@ export function AccountCenter() {
           <div className="p-7 sm:p-10 lg:p-12">
             <span className="inline-flex rounded-full bg-[#e7f5ec] px-3 py-1.5 text-[10px] font-black uppercase tracking-[.14em] text-[#28734e]">Cuenta Growtella</span>
             <h2 className="mt-5 text-3xl font-black tracking-[-.04em] text-[#153f2e] sm:text-4xl">
-              {mode === "signup" ? "CreÃ¡ tu cuenta central." : mode === "reset" ? "RecuperÃ¡ tu acceso." : mode === "update" ? "ElegÃ­ una contraseÃ±a nueva." : "VolvÃ© a tu espacio."}
+              {mode === "signup" ? "Creá tu cuenta central." : mode === "reset" ? "Recuperá tu acceso." : mode === "update" ? "Elegí una contraseña nueva." : "Volvé a tu espacio."}
             </h2>
-            <p className="mt-4 leading-7 text-[#5b6f66]">La misma cuenta sirve para la calculadora, tu plan Pro y las prÃ³ximas herramientas.</p>
+            <p className="mt-4 leading-7 text-[#5b6f66]">La misma cuenta sirve para la calculadora, tu plan Pro y las próximas herramientas.</p>
 
             {mode !== "reset" && mode !== "update" && (
               <button type="button" onClick={() => void signInWithGoogle()} disabled={saving} className="mt-7 flex w-full items-center justify-center gap-3 rounded-full border border-[#cfded5] bg-white px-5 py-3.5 text-sm font-extrabold text-[#153f2e] transition hover:bg-[#f5faf7] disabled:opacity-60">
@@ -406,14 +406,14 @@ export function AccountCenter() {
             <form onSubmit={submitAuth} className="grid gap-3">
               {mode === "signup" && <input required value={fullName} onChange={(event) => setFullName(event.target.value)} placeholder="Nombre completo" className="rounded-2xl border border-[#d7e4dc] px-4 py-3.5 text-sm text-[#153f2e] outline-none focus:border-[#78ae8e]" />}
               {mode !== "update" && <input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email" className="rounded-2xl border border-[#d7e4dc] px-4 py-3.5 text-sm text-[#153f2e] outline-none focus:border-[#78ae8e]" />}
-              {mode !== "reset" && <input required type="password" minLength={8} value={password} onChange={(event) => setPassword(event.target.value)} placeholder={mode === "update" ? "ContraseÃ±a nueva" : "ContraseÃ±a"} className="rounded-2xl border border-[#d7e4dc] px-4 py-3.5 text-sm text-[#153f2e] outline-none focus:border-[#78ae8e]" />}
+              {mode !== "reset" && <input required type="password" minLength={8} value={password} onChange={(event) => setPassword(event.target.value)} placeholder={mode === "update" ? "Contraseña nueva" : "Contraseña"} className="rounded-2xl border border-[#d7e4dc] px-4 py-3.5 text-sm text-[#153f2e] outline-none focus:border-[#78ae8e]" />}
               <button disabled={saving} className="mt-1 rounded-full bg-[#153f2e] px-5 py-3.5 text-sm font-black text-white transition hover:bg-[#0d3223] disabled:opacity-60">
-                {saving ? "Procesando..." : mode === "signup" ? "Crear cuenta" : mode === "reset" ? "Enviar enlace" : mode === "update" ? "Guardar contraseÃ±a" : "Ingresar"}
+                {saving ? "Procesando..." : mode === "signup" ? "Crear cuenta" : mode === "reset" ? "Enviar enlace" : mode === "update" ? "Guardar contraseña" : "Ingresar"}
               </button>
             </form>
 
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm font-bold text-[#47705d]">
-              {mode === "login" && <><button onClick={() => { setMode("signup"); setMessage(""); }}>Crear cuenta</button><button onClick={() => { setMode("reset"); setMessage(""); }}>OlvidÃ© mi contraseÃ±a</button></>}
+              {mode === "login" && <><button onClick={() => { setMode("signup"); setMessage(""); }}>Crear cuenta</button><button onClick={() => { setMode("reset"); setMessage(""); }}>Olvidé mi contraseña</button></>}
               {mode !== "login" && mode !== "update" && <button onClick={() => { setMode("login"); setMessage(""); }}>Volver a ingresar</button>}
             </div>
             {message && <p role="status" className="mt-5 rounded-2xl border border-[#d7e5dc] bg-[#f5faf7] p-4 text-sm leading-6 text-[#486055]">{message}</p>}
@@ -423,7 +423,7 @@ export function AccountCenter() {
             <p className="text-xs font-black uppercase tracking-[.15em] text-[#9de0b8]">Todo conectado</p>
             <h3 className="mt-4 text-3xl font-black tracking-tight">Una identidad. Todas tus herramientas.</h3>
             <div className="mt-8 grid gap-4">
-              {["Plan Pro reconocido en toda la plataforma", "DiagnÃ³sticos guardados y protegidos", "Escenarios e historial en un mismo lugar", "Perfil que se actualiza en todas las aplicaciones"].map((item) => <div key={item} className="flex items-start gap-3 rounded-2xl bg-white/[.07] p-4 text-sm leading-6 text-white/82"><span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#8bdbab] text-xs font-black text-[#153f2e]">âœ“</span>{item}</div>)}
+              {["Plan Pro reconocido en toda la plataforma", "Diagnósticos guardados y protegidos", "Escenarios e historial en un mismo lugar", "Perfil que se actualiza en todas las aplicaciones"].map((item) => <div key={item} className="flex items-start gap-3 rounded-2xl bg-white/[.07] p-4 text-sm leading-6 text-white/82"><span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#8bdbab] text-xs font-black text-[#153f2e]">✓</span>{item}</div>)}
             </div>
           </div>
         </div>
@@ -435,7 +435,7 @@ export function AccountCenter() {
 
   return (
     <section className="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-20">
-      {message && <div role="status" className="mb-6 flex items-start justify-between gap-4 rounded-2xl border border-[#d8e5dd] bg-[#f4faf6] p-4 text-sm text-[#496057]"><span>{message}</span><button onClick={() => setMessage("")} aria-label="Cerrar mensaje" className="font-black">Ã—</button></div>}
+      {message && <div role="status" className="mb-6 flex items-start justify-between gap-4 rounded-2xl border border-[#d8e5dd] bg-[#f4faf6] p-4 text-sm text-[#496057]"><span>{message}</span><button onClick={() => setMessage("")} aria-label="Cerrar mensaje" className="font-black">×</button></div>}
 
       <div className="overflow-hidden rounded-[2rem] border border-[#d7e5dc] bg-white shadow-xl shadow-[#153f2e]/7">
         <div className="border-b border-[#e0eae3] bg-[linear-gradient(135deg,#f5faf7,#ffffff)] p-7 sm:p-10">
@@ -446,7 +446,7 @@ export function AccountCenter() {
             </div>
             <div className="flex flex-wrap gap-3">
               <span className={`inline-flex items-center rounded-full px-4 py-2 text-xs font-black uppercase tracking-[.12em] ${plan.plan === "pro" ? "bg-[#153f2e] text-[#a6e6bf]" : "bg-[#e9f4ed] text-[#397258]"}`}>{plan.plan === "pro" ? "Growtella Pro" : "Plan gratuito"}</span>
-              <button onClick={() => void getSupabaseClient()?.auth.signOut()} className="rounded-full border border-[#d2e0d7] px-4 py-2 text-xs font-black text-[#51685d] hover:bg-[#f5faf7]">Cerrar sesiÃ³n</button>
+              <button onClick={() => void getSupabaseClient()?.auth.signOut()} className="rounded-full border border-[#d2e0d7] px-4 py-2 text-xs font-black text-[#51685d] hover:bg-[#f5faf7]">Cerrar sesión</button>
             </div>
           </div>
         </div>
@@ -458,22 +458,22 @@ export function AccountCenter() {
 
           <div className="mt-9 grid gap-6 lg:grid-cols-[1.08fr_.92fr]">
             <section className="rounded-3xl border border-[#dce7e0] p-6 sm:p-7">
-              <div className="flex items-end justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[.13em] text-[#6b8276]">Actividad compartida</p><h3 className="mt-2 text-2xl font-black tracking-tight text-[#153f2e]">ContinuÃ¡ donde lo dejaste</h3></div>{dataLoading && <span className="text-xs font-bold text-[#7b8c84]">Actualizando...</span>}</div>
+              <div className="flex items-end justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[.13em] text-[#6b8276]">Actividad compartida</p><h3 className="mt-2 text-2xl font-black tracking-tight text-[#153f2e]">Continuá donde lo dejaste</h3></div>{dataLoading && <span className="text-xs font-bold text-[#7b8c84]">Actualizando...</span>}</div>
               <div className="mt-5 divide-y divide-[#e5ede8]">
-                {activities.length ? activities.map((item) => <a key={`${item.kind}-${item.id}`} href={item.href} className="flex items-center gap-4 py-4 first:pt-0 last:pb-0 group"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#edf7f0] text-[#337453]">{item.kind === "analysis" ? "âœ¦" : item.kind === "diagnostic" ? "â—Ž" : "âŒ"}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-black text-[#294739] group-hover:text-[#216945]">{item.title}</p><p className="mt-1 truncate text-xs text-[#7a8b83]">{item.detail} Â· {formatDate(item.date)}</p></div><span className="text-[#4a8065]">â†’</span></a>) : <div className="rounded-2xl bg-[#f6faf7] p-7 text-center"><p className="text-sm text-[#61746a]">TodavÃ­a no guardaste actividad.</p><a href="/diagnostico" className="mt-4 inline-flex rounded-full bg-[#153f2e] px-4 py-2.5 text-xs font-black text-white">Crear mi primer diagnÃ³stico</a></div>}
+                {activities.length ? activities.map((item) => <a key={`${item.kind}-${item.id}`} href={item.href} className="flex items-center gap-4 py-4 first:pt-0 last:pb-0 group"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#edf7f0] text-[#337453]">{item.kind === "analysis" ? "✦" : item.kind === "diagnostic" ? "◎" : "⌁"}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-black text-[#294739] group-hover:text-[#216945]">{item.title}</p><p className="mt-1 truncate text-xs text-[#7a8b83]">{item.detail} · {formatDate(item.date)}</p></div><span className="text-[#4a8065]">→</span></a>) : <div className="rounded-2xl bg-[#f6faf7] p-7 text-center"><p className="text-sm text-[#61746a]">Todavía no guardaste actividad.</p><a href="/diagnostico" className="mt-4 inline-flex rounded-full bg-[#153f2e] px-4 py-2.5 text-xs font-black text-white">Crear mi primer diagnóstico</a></div>}
               </div>
             </section>
 
             <section className="rounded-3xl border border-[#dce7e0] bg-[#f6faf7] p-6 sm:p-7">
               <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[.13em] text-[#6b8276]">Perfil central</p><h3 className="mt-2 text-2xl font-black tracking-tight text-[#153f2e]">Tus datos</h3></div>{!editing && <button onClick={() => setEditing(true)} className="rounded-full border border-[#cadcd1] bg-white px-4 py-2 text-xs font-black text-[#365d49]">Editar</button>}</div>
-              {editing ? <form onSubmit={saveProfile} className="mt-5 grid gap-3">{[["full_name","Nombre completo"],["business_name","Emprendimiento"],["role","Actividad"],["city","Ciudad"]].map(([key,label]) => <label key={key} className="grid gap-1.5 text-xs font-bold text-[#65786f]">{label}<input value={profile[key as keyof typeof profile]} onChange={(event) => setProfile({ ...profile, [key]: event.target.value })} className="rounded-xl border border-[#d6e3db] bg-white px-4 py-3 text-sm text-[#153f2e] outline-none focus:border-[#7bb192]" /></label>)}<div className="mt-2 flex gap-2"><button disabled={saving} className="rounded-full bg-[#153f2e] px-4 py-2.5 text-xs font-black text-white">{saving ? "Guardando..." : "Guardar"}</button><button type="button" onClick={() => setEditing(false)} className="rounded-full border border-[#cfddd4] bg-white px-4 py-2.5 text-xs font-black text-[#607269]">Cancelar</button></div></form> : <dl className="mt-5 grid gap-4 text-sm"><div><dt className="text-xs font-bold text-[#829088]">Nombre</dt><dd className="mt-1 font-extrabold text-[#294739]">{profile.full_name || userName}</dd></div><div><dt className="text-xs font-bold text-[#829088]">Emprendimiento</dt><dd className="mt-1 font-extrabold text-[#294739]">{profile.business_name || "Sin completar"}</dd></div><div><dt className="text-xs font-bold text-[#829088]">Actividad y ciudad</dt><dd className="mt-1 font-extrabold text-[#294739]">{[profile.role, profile.city].filter(Boolean).join(" Â· ") || "Sin completar"}</dd></div></dl>}
+              {editing ? <form onSubmit={saveProfile} className="mt-5 grid gap-3">{[["full_name","Nombre completo"],["business_name","Emprendimiento"],["role","Actividad"],["city","Ciudad"]].map(([key,label]) => <label key={key} className="grid gap-1.5 text-xs font-bold text-[#65786f]">{label}<input value={profile[key as keyof typeof profile]} onChange={(event) => setProfile({ ...profile, [key]: event.target.value })} className="rounded-xl border border-[#d6e3db] bg-white px-4 py-3 text-sm text-[#153f2e] outline-none focus:border-[#7bb192]" /></label>)}<div className="mt-2 flex gap-2"><button disabled={saving} className="rounded-full bg-[#153f2e] px-4 py-2.5 text-xs font-black text-white">{saving ? "Guardando..." : "Guardar"}</button><button type="button" onClick={() => setEditing(false)} className="rounded-full border border-[#cfddd4] bg-white px-4 py-2.5 text-xs font-black text-[#607269]">Cancelar</button></div></form> : <dl className="mt-5 grid gap-4 text-sm"><div><dt className="text-xs font-bold text-[#829088]">Nombre</dt><dd className="mt-1 font-extrabold text-[#294739]">{profile.full_name || userName}</dd></div><div><dt className="text-xs font-bold text-[#829088]">Emprendimiento</dt><dd className="mt-1 font-extrabold text-[#294739]">{profile.business_name || "Sin completar"}</dd></div><div><dt className="text-xs font-bold text-[#829088]">Actividad y ciudad</dt><dd className="mt-1 font-extrabold text-[#294739]">{[profile.role, profile.city].filter(Boolean).join(" · ") || "Sin completar"}</dd></div></dl>}
             </section>
           </div>
 
           <section className="mt-9">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-black uppercase tracking-[.13em] text-[#6b8276]">Tus aplicaciones</p><h3 className="mt-2 text-2xl font-black tracking-tight text-[#153f2e]">Una cuenta para todo Growtella</h3></div><p className="text-sm text-[#718078]">{diagnosticCount} diagnÃ³sticos Â· {analysisCount} anÃ¡lisis Â· {scenarioCount} escenarios</p></div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-black uppercase tracking-[.13em] text-[#6b8276]">Tus aplicaciones</p><h3 className="mt-2 text-2xl font-black tracking-tight text-[#153f2e]">Una cuenta para todo Growtella</h3></div><p className="text-sm text-[#718078]">{diagnosticCount} diagnósticos · {analysisCount} análisis · {scenarioCount} escenarios</p></div>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
-              {products.map((product, index) => <article key={product.name} className="rounded-2xl border border-[#dce7e0] p-5"><div className="flex items-start gap-4"><span className={`grid size-11 shrink-0 place-items-center rounded-xl ${index === 0 ? "bg-[#153f2e] text-white" : "bg-[#e9f6ee] text-[#28734e]"}`}>{productIcons[index]}</span><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-3"><h4 className="font-black text-[#244437]">{product.name}</h4><span className="text-[10px] font-black uppercase tracking-[.1em] text-[#668176]">{product.status === "available" ? "Activa" : "PrÃ³ximamente"}</span></div><p className="mt-2 text-sm leading-6 text-[#687a71]">{product.description}</p>{product.status === "available" ? <a href={product.href} className="mt-4 inline-flex text-xs font-black text-[#246d4a]">Abrir aplicaciÃ³n â†’</a> : <span aria-disabled="true" className="mt-4 inline-flex text-xs font-black text-[#7a897f]">PrÃ³ximamente</span>}</div></div></article>)}
+              {products.map((product, index) => <article key={product.name} className="rounded-2xl border border-[#dce7e0] p-5"><div className="flex items-start gap-4"><span className={`grid size-11 shrink-0 place-items-center rounded-xl ${index === 0 ? "bg-[#153f2e] text-white" : "bg-[#e9f6ee] text-[#28734e]"}`}>{productIcons[index]}</span><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-3"><h4 className="font-black text-[#244437]">{product.name}</h4><span className="text-[10px] font-black uppercase tracking-[.1em] text-[#668176]">{product.status === "available" ? "Activa" : "Próximamente"}</span></div><p className="mt-2 text-sm leading-6 text-[#687a71]">{product.description}</p>{product.status === "available" ? <a href={product.href} className="mt-4 inline-flex text-xs font-black text-[#246d4a]">Abrir aplicación →</a> : <span aria-disabled="true" className="mt-4 inline-flex text-xs font-black text-[#7a897f]">Próximamente</span>}</div></div></article>)}
             </div>
           </section>
         </div>
@@ -481,4 +481,3 @@ export function AccountCenter() {
     </section>
   );
 }
-
