@@ -125,7 +125,7 @@ function UsageCard({ item }: { item: UsageItem }) {
   );
 }
 
-const productIcons = ["⌁", "◎", "CN", "✦"];
+const productIcons = ["⌁", "◎", "CN"];
 
 export function AccountCenter() {
   const router = useRouter();
