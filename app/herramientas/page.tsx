@@ -6,16 +6,16 @@ import { products } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Herramientas",
-  description: "Calculá, diagnosticá y prepará mejores decisiones con las tres herramientas del ecosistema Growtella.",
+  description: "Calculá, diagnosticá, comprá o vendé negocios y prepará mejores decisiones con las cuatro herramientas del ecosistema Growtella.",
 };
 
-const icons = ["⌁", "◎", "✦"];
+const icons = ["⌁", "◎", "CN", "✦"];
 
 export default function ToolsPage() {
   return (
-    <PageShell eyebrow="Catálogo Growtella" title="Tres herramientas. Una decisión más clara." description="Cada herramienta tiene un propósito concreto, un precio visible y la misma experiencia simple para que puedas pasar de la duda a la acción.">
+    <PageShell eyebrow="Catálogo Growtella" title="Cuatro herramientas. Una decisión más clara." description="Cada herramienta tiene un propósito concreto, un precio visible y la misma experiencia simple para que puedas pasar de la duda a la acción.">
       <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-24">
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-4">
           {products.map((product, index) => (
             <article key={product.name} className={`card-hover flex min-h-[470px] flex-col rounded-[1.75rem] border p-7 sm:p-8 ${index === 0 ? "border-[#bcd7c6] bg-[#f5faf7]" : "border-[#dbe7df] bg-white"}`}>
               <div className="flex items-start justify-between gap-4">

@@ -9,6 +9,9 @@ export const siteConfig = {
   calculatorUrl:
     process.env.NEXT_PUBLIC_CALCULATOR_URL ||
     "https://www.calculadoraemprendedora.com",
+  marketplaceUrl:
+    process.env.NEXT_PUBLIC_COMPRA_NEGOCIO_URL ||
+    "https://compra-negocio.vercel.app",
 };
 
 type ProductBase = {
@@ -49,6 +52,19 @@ export const products: Product[] = [
     price: "Gratis",
     priceDetail: "sin registro",
     features: ["Preguntas adaptadas a tu negocio", "Margen y punto de equilibrio", "Plan personalizado de 30 días"],
+  },
+  {
+    name: "Compra Negocio",
+    description:
+      "Explorá negocios digitales en funcionamiento, comprá una participación o publicá tu proyecto para recibir ofertas.",
+    eyebrow: "Marketplace digital",
+    href: siteConfig.marketplaceUrl,
+    status: "available",
+    accent: "mint",
+    price: "Gratis",
+    priceDetail: "para explorar y publicar",
+    features: ["Negocios digitales disponibles", "Participaciones o venta completa", "Consultas y ofertas privadas"],
+    external: true,
   },
   {
     name: "Presupuestos Inteligentes",
