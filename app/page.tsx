@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { BILLING_OPTIONS } from "@/lib/plans";
+import { PRICING_PLANS } from "@/lib/plans";
 import { products, siteConfig } from "@/lib/site";
 
 function Arrow() {
@@ -100,7 +100,7 @@ export default function Home() {
 
       <section className="border-b border-[#e3ebe6] bg-white">
         <div className="mx-auto grid max-w-7xl divide-y divide-[#e3ebe6] px-5 sm:px-8 md:grid-cols-3 md:divide-x md:divide-y-0">
-          {[["01", "Una cuenta", "para todo el ecosistema"], ["02", "Un plan Pro", "con tres formas de pago"], ["03", "Una prioridad", "para saber qué hacer hoy"]].map(([number, title, text]) => (
+          {[["01", "Una cuenta", "para todo el ecosistema"], ["02", "Tres planes", "para elegir tu capacidad"], ["03", "Una prioridad", "para saber qué hacer hoy"]].map(([number, title, text]) => (
             <div key={title} className="flex items-center justify-center gap-4 px-4 py-7 md:justify-start">
               <span className="font-mono text-xs font-black text-[#45946d]">{number}</span><div><p className="text-sm font-black text-[#153f2e]">{title}</p><p className="mt-0.5 text-sm text-[#71827a]">{text}</p></div>
             </div>
@@ -192,31 +192,30 @@ export default function Home() {
           <div className="grid gap-8 lg:grid-cols-[.85fr_1.15fr] lg:items-end">
             <div>
               <p className="text-xs font-black uppercase tracking-[.17em] text-[#91dfae]">Precios transparentes</p>
-              <h2 className="mt-4 text-4xl font-black tracking-[-.05em] sm:text-5xl">Un solo Pro. Tres formas de pagarlo.</h2>
+              <h2 className="mt-4 text-4xl font-black tracking-[-.05em] sm:text-5xl">Tres planes mensuales. Elegí el que necesitás hoy.</h2>
             </div>
-            <p className="max-w-2xl text-lg leading-8 text-white/62 lg:justify-self-end">Las funciones gratuitas siguen siendo gratuitas. Pro amplía IA, historial y exportaciones en todo el ecosistema.</p>
+            <p className="max-w-2xl text-lg leading-8 text-white/62 lg:justify-self-end">Las calculadoras gratuitas siguen disponibles sin límite. Los planes pagos suman guardado, comparación y más capacidad de IA.</p>
           </div>
 
           <div className="mt-12 grid gap-4 lg:grid-cols-3">
-            {BILLING_OPTIONS.map((option) => (
-              <article key={option.id} className={`relative rounded-[1.75rem] border p-7 ${option.id === "annual" ? "border-[#8bd8a8] bg-white text-[#153f2e] shadow-2xl shadow-black/15" : "border-white/12 bg-white/[.055]"}`}>
-                {option.id === "annual" && <span className="absolute -top-3 left-7 rounded-full bg-[#8fdfaD] px-3 py-1.5 text-[10px] font-black uppercase tracking-[.13em] text-[#153f2e]">Mejor precio</span>}
+            {PRICING_PLANS.map((plan) => (
+              <article key={plan.id} className={`relative rounded-[1.75rem] border p-7 ${plan.id === "pro" ? "border-[#8bd8a8] bg-white text-[#153f2e] shadow-2xl shadow-black/15" : "border-white/12 bg-white/[.055]"}`}>
+                {plan.id === "pro" && <span className="absolute -top-3 left-7 rounded-full bg-[#8fdfad] px-3 py-1.5 text-[10px] font-black uppercase tracking-[.13em] text-[#153f2e]">Recomendado</span>}
                 <div className="flex items-center justify-between gap-4">
-                  <p className={`text-sm font-black ${option.id === "annual" ? "text-[#2c6f4e]" : "text-[#a5dfba]"}`}>{option.label}</p>
-                  {option.discount > 0 && <span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${option.id === "annual" ? "bg-[#e4f5ea] text-[#26734f]" : "bg-white/10 text-white/72"}`}>-{option.discount}%</span>}
+                  <p className={`text-sm font-black ${plan.id === "pro" ? "text-[#2c6f4e]" : "text-[#a5dfba]"}`}>{plan.name}</p>
                 </div>
-                <p className="mt-6 text-4xl font-black tracking-[-.05em]">{formatUsd(option.totalUsd)}</p>
-                <p className={`mt-2 text-sm ${option.id === "annual" ? "text-[#687b71]" : "text-white/50"}`}>{option.months === 1 ? "por mes" : `pago cada ${option.months} meses`}</p>
-                <div className={`mt-6 border-t pt-5 ${option.id === "annual" ? "border-[#dce8e0]" : "border-white/10"}`}>
-                  <p className="text-sm font-black">{formatUsd(option.monthlyUsd)} <span className={`font-medium ${option.id === "annual" ? "text-[#71837b]" : "text-white/45"}`}>equivalentes por mes</span></p>
-                  <p className={`mt-2 text-xs leading-5 ${option.id === "annual" ? "text-[#71837b]" : "text-white/45"}`}>{option.discount ? `Ahorrás ${option.discount}% frente al plan mensual.` : "Flexibilidad para cancelar mes a mes."}</p>
+                <p className="mt-6 text-4xl font-black tracking-[-.05em]">{formatUsd(plan.priceUsd)}</p>
+                <p className={`mt-2 text-sm ${plan.id === "pro" ? "text-[#687b71]" : "text-white/50"}`}>por mes</p>
+                <div className={`mt-6 border-t pt-5 ${plan.id === "pro" ? "border-[#dce8e0]" : "border-white/10"}`}>
+                  <p className="text-sm font-black">{plan.tagline}</p>
+                  <p className={`mt-2 text-xs leading-5 ${plan.id === "pro" ? "text-[#71837b]" : "text-white/45"}`}>{plan.description}</p>
                 </div>
               </article>
             ))}
           </div>
           <div className="mt-8 flex flex-col items-center justify-between gap-5 rounded-2xl border border-white/10 bg-white/[.045] p-5 sm:flex-row sm:px-7">
             <p className="text-sm leading-6 text-white/62"><span className="font-black text-white">Plan Gratis: US$ 0.</span> Incluye la Calculadora Emprendedora esencial y el Diagnóstico 360° sin registro.</p>
-            <Link href="/pro" className="focus-ring inline-flex shrink-0 items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-black text-[#153f2e] hover:bg-[#eaf7ef]">Comparar Gratis y Pro <Arrow /></Link>
+            <Link href="/pro" className="focus-ring inline-flex shrink-0 items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-black text-[#153f2e] hover:bg-[#eaf7ef]">Comparar todos los planes <Arrow /></Link>
           </div>
         </div>
       </section>

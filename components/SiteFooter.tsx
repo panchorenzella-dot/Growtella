@@ -16,7 +16,7 @@ export function SiteFooter() {
           <div className="mt-4 grid gap-3 text-sm text-[#5b6f66]">
             <Link href="/herramientas" className="hover:text-[#153f2e]">Herramientas</Link>
             <Link href="/diagnostico" className="hover:text-[#153f2e]">Diagnóstico 360°</Link>
-            <Link href="/pro" className="hover:text-[#153f2e]">Growtella Pro</Link>
+            <Link href="/pro" className="hover:text-[#153f2e]">Planes y precios</Link>
             <Link href="/cuenta" className="hover:text-[#153f2e]">Mi cuenta</Link>
             <Link href="/contacto" className="hover:text-[#153f2e]">Contacto</Link>
           </div>

@@ -5,7 +5,7 @@ import { AccountHeaderLink } from "./AccountHeaderLink";
 const links = [
   { href: "/herramientas", label: "Herramientas" },
   { href: "/diagnostico", label: "Diagnóstico gratis" },
-  { href: "/pro", label: "Growtella Pro" },
+  { href: "/pro", label: "Planes" },
   { href: "/#precios", label: "Precios" },
 ];
 
